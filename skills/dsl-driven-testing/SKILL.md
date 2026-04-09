@@ -1,25 +1,41 @@
 ---
 name: dsl-driven-testing
-description: Proactively apply when writing acceptance tests, designing test architecture, or separating test concerns. Triggers on DSL tests, protocol drivers, four-layer testing, ATDD, subsecond TDD, acceptance tests, test DSL, business language tests, Scenario builder, Screenplay pattern. Use when creating test suites that must run at multiple levels (unit/integration/E2E), structuring test layers, or when tests are too coupled to infrastructure. Decouples test scenarios from implementation so the same test runs in milliseconds (in-memory) or minutes (real browser).
+description: Proactively apply when writing acceptance tests, designing test architecture, or separating test concerns. Triggers on DSL tests, protocol drivers, four-layer testing, ATDD, subsecond TDD, acceptance tests, test DSL, business language tests, Scenario builder, Screenplay pattern. Use when creating test suites that must run at multiple levels (unit/integration/E2E), or when you want tests to express business intent clearly even at a single level. Decouples test scenarios from implementation and turns tests into readable executable specifications.
 ---
 
-# DSL-Driven Testing — Four Layer Architecture
+# DSL-Driven Testing — Default Way to Write Tests
 
 > Known as: **SimpleDSL**, **Four Layer Testing**, **ATDD with Protocol Drivers**, **Subsecond TDD**
 >
-> Core idea: write tests in a **pure business DSL**, then plug in different **drivers** (in-memory, HTTP, UI…) — the same scenarios run in milliseconds in-memory and as full E2E tests.
+> Write tests in a **pure business DSL**, then plug in different **drivers** (in-memory, HTTP, UI...) when needed. This should be the **default testing style by a wide margin** for new code and greenfield work, because it produces clearer executable specs, better design pressure, and lower long-term maintenance cost than implementation-coupled tests.
+>
+> Start even with a single driver. Multiple drivers are a payoff, not a prerequisite. The main exception is **brownfield code** where introducing the DSL everywhere would create too much churn for too little value, or would require a team migration the context does not justify.
+
+---
+
+## Default Stance
+
+Use this as the **default way to write tests** unless there is a concrete reason not to.
+
+- Prefer this style for new features, bug fixes, and any test suite expected to live longer than a short spike
+- Prefer this style even when only one execution level exists today
+- Treat multiple drivers as an option, not a prerequisite
+- Fall back to more direct tests mainly in brownfield areas where migration cost, churn, or team adoption cost is clearly too high relative to the benefit
+
+If you're hesitating, start with a small business DSL rather than writing tests directly against UI, HTTP, or framework details.
 
 ---
 
 ## When to Use / Skip
 
-| Use When | Skip When |
-|----------|-----------|
-| Test suite needs multiple execution levels | Single-level test suite (unit only) |
-| Tests are coupled to UI/HTTP/DB | Simple CRUD with no business logic |
-| Want same scenario to run fast AND realistically | Throwaway script or prototype |
-| Building long-lived system with evolving infra | Quick spike |
-| Acceptance tests break on every UI change | Tests already run in < 1s everywhere |
+| Use When | Skip / Relax When |
+|----------|---------------------|
+| Almost always for new product code | Brownfield area where retrofitting the DSL broadly would be too expensive or disruptive right now |
+| Test suite needs multiple execution levels | Throwaway spike or short-lived prototype |
+| Tests are coupled to UI/HTTP/DB | Truly trivial code where a DSL adds ceremony without improving clarity |
+| Want same scenario to run fast AND realistically | Team constraints make a full migration unrealistic for now |
+| Building long-lived system with evolving infra | Existing tests are already clear enough and changing them would mostly create churn |
+| Want tests to read like executable specs, even in unit tests | Simple CRUD with no meaningful business language to preserve |
 
 ---
 
@@ -52,6 +68,10 @@ description: Proactively apply when writing acceptance tests, designing test arc
 
 **Substitution principle**: same test case + same DSL can connect to any driver. The DSL is the stable interface; drivers are swappable.
 
+**One driver is enough to start**: the main benefit is already there with a single driver: a stable business language for tests, clearer scenarios, less brittle setup, and easier long-term maintenance. Additional drivers can come later if they become useful.
+
+**Brownfield exception**: don't force a large rewrite just to reach purity. Introduce the DSL where new work is happening, where pain is highest, or where it creates leverage.
+
 ---
 
 ## Quick Decision Trees
@@ -70,6 +90,8 @@ Where does this code go?
 
 ```
 Test goal?
+├─ Only one useful driver today                          → Use it directly; runtime selection can wait
+├─ Express business rules clearly in unit tests        → Domain/in-memory driver is enough
 ├─ Validate business logic — fast                    → In-memory / Domain driver
 ├─ Validate HTTP contract / API                      → HTTP driver
 ├─ Validate UI rendering / user flows                → WebDriver / Playwright
@@ -90,6 +112,7 @@ Language / ecosystem?
 
 ```
 Approach?
+├─ Only one driver exists for now                     → No runtime selection yet
 ├─ CI matrix or explicit command                     → Environment variables (codebreaker-js style)
 ├─ pytest fixture                                    → conftest.py --driver option
 ├─ Auto-detect from env (creds available?)           → .auto() method on Scenario
@@ -140,6 +163,30 @@ The DSL is the **lingua franca** between tests and infrastructure.
 4. **Encode common setup** — `createUser`, `populateBaseData` are DSL responsibilities
 5. **No Java/Python variables in tests** — use aliases stored in `TestContext`
 6. **No computed expressions** — values are declared, not calculated
+
+### DSL Must Be Reusable & Business-Focused
+
+> **Critical**: A true business DSL accepts **inputs and outputs directly in business terms** — it must be reusable across different scenarios without exposing implementation details.
+
+| Principle | Implementation-Coupled DSL | True Business DSL |
+|-----------|----------------------------|-------------------|
+| **Inputs** | `.with_http_response(status=200, body={...})` | `.given_offers(offers=[...])` |
+| **Outputs** | `.then_last_get_url_contains("...")` | `.then_offers_found(count=N)` |
+| **Assertions** | Check HTTP status, headers, URL params | Check business outcomes, domain entities |
+| **Coupling** | Tied to driver internals | Driver is an implementation detail |
+
+```java
+// ❌ Implementation-coupled — can't reuse for other scenarios
+publicAPI.placeOrder("FTSE100", "side: buy", "quantity: 10");
+assertEquals("https://api.example.com/orders?symbol=FTSE100", lastUrl);
+
+// ✅ Business DSL — reusable, no implementation details exposed
+trading.placeOrder(symbol="FTSE100", side=Side.BUY, quantity=10);
+trading.then_orderIsConfirmed();  // Business outcome only
+trading.then_orderTotalValueIs(10, atPrice=5000);  // Domain logic
+```
+
+The DSL should hide **all** driver details. If your test assertions reference URLs, HTTP status codes, or driver internals, your DSL is not business-focused enough.
 
 ### LMAX-style DSL (Java — string params)
 
@@ -232,7 +279,7 @@ function getActor() {
 ```
 
 ```bash
-# Same scenario, 4 execution profiles
+# Same scenario, 3 execution profiles
 ACTOR=DirectActor    API=Codebreaker     cucumber-js  # in-memory, < 10ms
 ACTOR=DirectActor    API=HttpCodebreaker cucumber-js  # HTTP, < 500ms
 ACTOR=WebDriverActor API=HttpCodebreaker cucumber-js  # real browser, seconds
@@ -303,8 +350,12 @@ public class SystemDriver {
 | Backdoor DB setup | `INSERT INTO users…` — bypasses the system | Use DSL: `registrationAPI.createUser("Bob")` |
 | Shared test data | Tests depend on global state | Each test creates what it needs in `@Before` |
 | Logic in step definitions | `await page.fill('#q', '10')` in When | Delegate to DSL object |
-| Single driver type | E2E-only suite — slow and fragile | Add in-memory driver first |
+| Single slow driver only | UI/E2E-only suite — slow and fragile | Keep the DSL, add an in-memory driver first |
 | Mock frameworks over fakes | `MagicMock` hides behavior | Write a real `FakeHttpClient` class with state |
+| **DSL exposes driver internals** | Test checks `last_get_url`, HTTP status codes — can't swap driver | Refactor to business assertions like `then_offers_found()` |
+| **DSL input is driver-specific** | `.with_http_response(status=200, body={...})` leaks HTTP details | Use domain inputs like `.given_offers(offers=[...])` |
+| **Test asserts on URLs/headers** | `assertContains(lastUrl, "api/orders")` couples to implementation | Assert on business outcomes: `then_orderConfirmed()` |
+| **DSL not reusable** | New scenario requires new DSL methods or direct driver access | DSL should cover all common business scenarios |
 
 ---
 
@@ -324,9 +375,33 @@ public class SystemDriver {
 1. Write 2-3 tests covering the most important behaviors
 2. Invent the language you need — don't worry about implementation yet
 3. Implement the minimal DSL to pass these tests
-4. Start with an **in-memory driver** first
-5. Add a real driver once the domain is stable
+4. Start with a **single driver** that gives the fastest useful feedback (often in-memory)
+5. Add other drivers later only if they buy you confidence at another level
 6. Grow the DSL organically as new acceptance criteria arrive
+
+### Brownfield adoption rule
+
+In brownfield code, prefer **incremental adoption** over heroic rewrites.
+
+- Add the DSL first around new behavior, flaky areas, or tests that are painful to read/change
+- Do not rewrite a whole legacy suite only for aesthetic consistency
+- Do not impose a migration cost on the team unless the payoff is clear and near-term
+- But when you create new tests in a long-lived area, bias strongly toward the DSL instead of copying the old style
+
+### Brownfield: Business DSL vs Implementation-Coupled Tests
+
+> When adding new tests to brownfield code, the DSL must be **business-focused from the start** — even if implementation details leak elsewhere.
+
+**Key principle for brownfield**: The new DSL code you write must not expose driver internals. Even if existing tests check URLs or HTTP status codes, **your new DSL methods should hide all that**.
+
+| Scenario | Old style (avoid) | New DSL style (required) |
+|----------|------------------|-------------------------|
+| Setup data | `.with_http_response(status=200, body={...})` | `.given_orders([...])` |
+| Assert exception | `assert http.status == 401` | `.then_authenticationFails()` |
+| Assert result | `.then_last_url_contains("api/orders")` | `.then_orderIsConfirmed()` |
+| Stub external | `httpClient.stub(200, {...})` | `.given_offers(faked_offers)` |
+
+Even in brownfield, you have the opportunity to model the right behavior. The key is: **tests written against the new DSL should never need to know about HTTP, URLs, or driver internals**.
 
 ### Ownership model
 

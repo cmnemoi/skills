@@ -255,3 +255,67 @@ Driven Ports (right/secondary) → Real DB, External API, Stub/Mock
 2. **Real driver (HTTP/UI) + driven stubs** → validates API/UI contract  
 3. **Test driver + real driven adapters** → validates DB, external services
 4. **Everything real** → full E2E smoke test
+
+---
+
+## Business DSL Anti-Patterns
+
+These patterns indicate your DSL is too coupled to implementation:
+
+### 1. Driver Internals in Assertions
+
+```python
+# ❌ Anti-pattern: checks URL (driver detail)
+flow.then_last_get_url_contains("api/offres")
+
+# ✅ Business DSL: checks domain outcome
+flow.then_offers_found(count=5)
+flow.then_first_offer_has(titre="Développeur")
+```
+
+### 2. HTTP-Specific Setup Methods
+
+```python
+# ❌ Anti-pattern: HTTP response setup leaks into DSL
+flow.with_http_response(status=200, body={"resultats": [...]})
+
+# ✅ Business DSL: domain entities directly
+flow.given_offers(offers=[Offre(...), Offre(...)])
+```
+
+### 3. Test Accesses Driver State
+
+```python
+# ❌ Anti-pattern: test reads driver internals
+assert flow._http_client.last_get_url == "https://api.example.com/..."
+
+# ✅ Business DSL: all state hidden behind DSL methods
+flow.then_order_confirmed()
+flow.then_total_is(100.00)
+```
+
+### 4. Multiple Drivers Can't Share Tests
+
+If your test case needs to change when switching from in-memory to HTTP driver, your DSL is implementation-coupled.
+
+```python
+# ❌ Anti-pattern: different assertions per driver
+if driver == "http":
+    assert response.status_code == 200
+else:
+    assert response.body == expected
+
+# ✅ Business DSL: same test, any driver
+flow.then_offers_count(10)  # Works with all drivers
+```
+
+### Refactoring to Business DSL
+
+| From (Implementation) | To (Business) |
+|-----------------------|---------------|
+| `.then_last_url_contains("...")` | `.then_request_made_for(resource)` |
+| `.with_http_response(status, body)` | `.given_offers(offers)` or `.given_orders(orders)` |
+| `.then_status_code_is(401)` | `.then_authentication_fails()` |
+| Check `last_get_url` | `.then_search_performed_with(query)` |
+
+The goal: **same test case should run identically across all drivers** — the only thing that changes is the driver implementation.

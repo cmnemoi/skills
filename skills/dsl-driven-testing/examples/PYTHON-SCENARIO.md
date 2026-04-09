@@ -83,21 +83,34 @@ class Scenario:
         return self.unit()
 
     # -------------------------
-    # Fixture setup (Given)
+    # Fixture setup (Given) — Business-focused inputs
     # -------------------------
 
-    def with_token_response(
-        self,
-        access_token: str = "my_token",
-        expires_in: int = 1_499,
-    ) -> "Scenario":
-        """Pre-program a successful auth response."""
+    def with_authenticated(self, expires_in: int = 1_499) -> "Scenario":
+        """Pre-program a successful authentication (business language)."""
+        return self._with_token(
+            access_token="my_token",
+            expires_in=expires_in,
+        )
+
+    def _with_token(self, access_token: str, expires_in: int) -> "Scenario":
+        """Internal: programs a token response (driver detail)."""
         return self._with_http_response(status=200, body={
             "access_token": access_token,
             "expires_in": expires_in,
             "token_type": "Bearer",
             "scope": "api_offresdemploiv2",
         })
+
+    def given_offers(self, offers: list[Offre]) -> "Scenario":
+        """Provide offers directly from business domain — no HTTP details."""
+        self._offers = offers
+        return self
+
+    def given_offres_from_response(self, response_body: dict) -> "Scenario":
+        """Parse business data from API response format."""
+        self._offers = [Offre(**data) for data in response_body.get("resultats", [])]
+        return self
 
     def with_credentials(
         self,
@@ -151,7 +164,7 @@ class Scenario:
         return self
 
     # -------------------------
-    # Assertions (Then)
+    # Assertions (Then) — Business-focused outputs
     # -------------------------
 
     def then_all_offers_are(self, expected_type: type) -> "Scenario":
@@ -160,18 +173,41 @@ class Scenario:
             f"Expected all offers to be {expected_type.__name__}"
         return self
 
-    def then_last_get_url_contains(self, expected: str) -> "Scenario":
-        assert self._http_client.last_get_url is not None, "No GET request was made"
-        assert expected in self._http_client.last_get_url, \
-            f"Expected URL to contain '{expected}', got: {self._http_client.last_get_url}"
+    def then_offers_count(self, expected_count: int) -> "Scenario":
+        """Assert on business outcome — number of offers found."""
+        assert self._offers is not None, "No offers captured"
+        assert len(self._offers) == expected_count, \
+            f"Expected {expected_count} offers, got {len(self._offers)}"
         return self
 
-    def then_raised(self, exception_type: type, match: str | None = None) -> "Scenario":
+    def then_first_offer_has(self, **expected_fields: Any) -> "Scenario":
+        """Assert on domain entity fields — no HTTP/URL details."""
+        assert self._offers and len(self._offers) > 0, "No offers to check"
+        offer = self._offers[0]
+        for field, expected in expected_fields.items():
+            actual = getattr(offer, field, None)
+            assert actual == expected, \
+                f"Expected {field}={expected!r}, got {actual!r}"
+        return self
+
+    def then_raises(self, exception_type: type, match: str | None = None) -> "Scenario":
+        """Assert on business exception — not HTTP status."""
         assert self._captured_exception is not None, "No exception was captured"
         assert isinstance(self._captured_exception, exception_type), \
             f"Expected {exception_type.__name__}, got {type(self._captured_exception).__name__}"
         if match:
             assert match in str(self._captured_exception)
+        return self
+
+    # -------------------------
+    # Legacy assertions (Driver-internal — avoid in new code)
+    # -------------------------
+
+    def then_last_get_url_contains(self, expected: str) -> "Scenario":
+        """⚠️ Driver-internal — checks HTTP URL. Prefer business assertions."""
+        assert self._http_client.last_get_url is not None, "No GET request was made"
+        assert expected in self._http_client.last_get_url, \
+            f"Expected URL to contain '{expected}', got: {self._http_client.last_get_url}"
         return self
 
     # -------------------------
@@ -287,12 +323,13 @@ def expect(value: Any) -> Expectation:
 ### Unit test (in-memory, < 10ms)
 
 ```python
+# ✅ Business-focused DSL — no driver internals
 def test_should_search_job_offers_with_filters() -> None:
     flow = (
         scenario()
         .unit()
-        .with_token_response()
-        .with_http_response(status=200, body={"resultats": []})
+        .with_authenticated()  # Business language
+        .given_offres_from_response({"resultats": []})  # Business input
         .with_credentials(client_id="client-id", client_secret="client-secret")
         .with_offres_client()
     )
@@ -304,9 +341,9 @@ def test_should_search_job_offers_with_filters() -> None:
         type_contrat=CodeTypeContrat.CDI,
     )
 
-    flow.then_last_get_url_contains("motsCles=développeur python")
-    flow.then_last_get_url_contains("sort=1")
-    flow.then_last_get_url_contains("typeContrat=CDI")
+    flow.then_offers_count(0)  # Business outcome
+    flow.then_first_offer_has(titre="Développeur Python")  # Domain entity check
+```
 ```
 
 ### Integration test (real HTTP)
