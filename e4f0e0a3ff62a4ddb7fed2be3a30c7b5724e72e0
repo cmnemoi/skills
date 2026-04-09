@@ -1,0 +1,23 @@
+skills/spec-driven-development/SKILL.md
+  d5c394ab89dc5df0 150-154,167,175,184,319,325,357
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.6",
+  "base_commit_sha": "e4f0e0a3ff62a4ddb7fed2be3a30c7b5724e72e0",
+  "prompts": {
+    "d5c394ab89dc5df0": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28cef771dffeDc5SrOxhZLCwsN",
+        "model": "opencode/minimax-m2.5-free"
+      },
+      "human_author": "Charles-Meldhine Madi Mnemoi",
+      "messages": [],
+      "total_additions": 13,
+      "total_deletions": 11,
+      "accepted_lines": 12,
+      "overriden_lines": 1
+    }
+  }
+}
