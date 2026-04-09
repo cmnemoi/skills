@@ -58,30 +58,27 @@ DSL-driven testing with a four-layer architecture (SimpleDSL, ATDD, Protocol Dri
 npx skills add https://github.com/cmnemoi/skills --skill dsl-driven-testing
 ```
 
----
+### spec-driven-development
 
-## Installation
-
-Install all skills at once:
+Pragmatic Spec-Driven Development centered on a lightweight spec-test-code triangle. Use when defining feature behavior before implementation, keeping specs aligned with tests and code, or introducing lightweight spec workflows. Covers spec types (feature, bugfix, design-first), stable IDs format `(bounded-context).subdomain.feature::rule-name`, and traceability best practices.
 
 ```bash
-npx skills add https:github.com/cmnemoi/skills
+npx skills add https://github.com/cmnemoi/skills --skill spec-driven-development
 ```
 
-Or install individual skills:
+### write-unit-tests
+
+Guide for writing and reviewing unit tests. Use when adding tests, fixing brittle test suites, or guiding agents toward maintainable, refactor-safe tests. Covers TDD, AAA pattern, test doubles (mocks, fakes, stubs), test smells, and when to use a business DSL vs. brownfield pragmatism.
 
 ```bash
-npx skills add https://github.com/cmnemoi/skills --skill <skill-name>
+npx skills add https://github.com/cmnemoi/skills --skill write-unit-tests
 ```
 
-Check installed skills:
+### ralph-loop
+
+Autonomous coding loop with context resets for mechanical, externally verifiable tasks. Use when a task is guided by a short repo spec, involves binary checks (tests pass/fail), and requires iterative progress. Based on "Ralph Wiggum" pattern for avoiding context rot in long-running autonomous sessions.
 
 ```bash
-npx skills check
+npx skills add https://github.com/cmnemoi/skills --skill ralph-loop
 ```
 
-Update all skills:
-
-```bash
-npx skills update
-```
