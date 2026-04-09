@@ -145,11 +145,13 @@ For each important rule, ask:
 
 The most useful SDD habit is explicit linking inside the repo.
 
-Assign each behavior a stable ID such as:
+Assign each behavior a stable ID following the format: `(bounded-context).subdomain.feature::business-rule`
 
-- `checkout::applies-member-discount`
-- `search::returns-partial-matches`
-- `auth.session::expires-after-inactivity`
+Examples:
+
+- `checkout.pricing.applies-member-discount::member-discount-applied`
+- `search.product.find-by-query::partial-matches-allowed`
+- `auth.session.security::expires-after-inactivity`
 
 Then link that ID in:
 
@@ -162,7 +164,7 @@ Then link that ID in:
 ```md
 ### Member discount is applied
 
-`{#checkout::applies-member-discount}`
+`{#checkout.pricing.applies-member-discount::member-discount-applied}`
 
 When a signed-in member confirms checkout, the final total includes the member discount.
 ```
@@ -170,7 +172,7 @@ When a signed-in member confirms checkout, the final total includes the member d
 ### Test example
 
 ```ts
-/** @spec checkout::applies-member-discount */
+/** @spec checkout.pricing.applies-member-discount::member-discount-applied */
 it("applies the member discount at checkout", () => {
   // ...
 });
@@ -179,7 +181,7 @@ it("applies the member discount at checkout", () => {
 ### Code example
 
 ```ts
-/** @spec checkout::applies-member-discount */
+/** @spec checkout.pricing.applies-member-discount::member-discount-applied */
 function computeCheckoutTotal(input: CheckoutInput): Money {
   // ...
 }
@@ -314,13 +316,13 @@ This spec covers discount application in the final checkout total.
 
 ### Member discount is applied
 
-`{#checkout::applies-member-discount}`
+`{#checkout.pricing.applies-member-discount::member-discount-applied}`
 
 When a signed-in member confirms checkout, the final total includes the member discount.
 
 ### Guest users do not receive the discount
 
-`{#checkout::does-not-apply-member-discount-to-guests}`
+`{#checkout.pricing.applies-member-discount::guest-no-discount}`
 
 When a guest confirms checkout, no member discount is applied.
 
@@ -352,7 +354,7 @@ it("applies discount", () => {
 });
 
 // ✅ Test linked to the spec
-/** @spec checkout::applies-member-discount */
+/** @spec checkout.pricing.applies-member-discount::member-discount-applied */
 it("applies the member discount at checkout", () => {
   // ...
 });
