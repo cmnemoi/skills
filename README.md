@@ -82,3 +82,11 @@ Autonomous coding loop with context resets for mechanical, externally verifiable
 npx skills add https://github.com/cmnemoi/skills --skill ralph-loop
 ```
 
+### style-technique-charles
+
+Write engaging (hopefully) technical content in my style (in French). Use when writing or rewriting a technical article, explanation, documentation, or experience report from notes, messages, drafts, or a subject.
+
+```bash
+npx skills add https://github.com/cmnemoi/skills --skill style-technique-charles
+```
+
