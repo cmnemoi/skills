@@ -1,0 +1,33 @@
+README.md
+  s_8d015a1ec9fd45::t_5dd9ecbdc5cb6e 85-86,88-92
+  h_32f94e59e2f995 87
+skills/style-technique-charles/SKILL.md
+  h_32f94e59e2f995 1-296
+skills/style-technique-charles/references/extraits.md
+  h_32f94e59e2f995 1-181
+skills/style-technique-charles/references/paires-contrastives.md
+  h_32f94e59e2f995 1-196
+skills/style-technique-charles/references/registre-article.md
+  h_32f94e59e2f995 1-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "24b6c895f9d062ee2ba996c44e79932bb457267d",
+  "prompts": {},
+  "humans": {
+    "h_32f94e59e2f995": {
+      "author": "Charles-Meldhine Madi Mnemoi <icdk5b4zf@relay.firefox.com>"
+    }
+  },
+  "sessions": {
+    "s_8d015a1ec9fd45": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a09b0f-ac9a-73ee-b780-6dee975deed1",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Charles-Meldhine Madi Mnemoi <icdk5b4zf@relay.firefox.com>"
+    }
+  }
+}
