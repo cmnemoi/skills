@@ -90,3 +90,11 @@ Write engaging (hopefully) technical content in my style (in French). Use when w
 npx skills add https://github.com/cmnemoi/skills --skill style-technique-charles
 ```
 
+### blog-technique-charles
+
+Turn raw technical material into a blog article people click, read, remember and share (in French). Channel skill on top of `style-technique-charles`: picks the angle, reader, open question and key proof, then works on title, intro, headings, retention, packaging and share messages, without inventing facts.
+
+```bash
+npx skills add https://github.com/cmnemoi/skills --skill blog-technique-charles
+```
+
