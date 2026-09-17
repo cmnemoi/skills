@@ -37,13 +37,13 @@ Mode PASSE BLOG : l'article est déjà rédigé avec `style-technique-charles`. 
    test qui l'a provoquée. »
    → phrase méta ; la promesse est un cours ; rien ne rend la suite désirable.
 
-✅ « Pendant trois ans, j'ai maintenu eMush, un jeu multijoueur open source. En février
-   2025, en relisant une merge request, j'ai vu un contributeur buter sur un test
-   unitaire : il ne comprenait pas ce que ce test vérifiait. Il avait de bonnes raisons.
-   Ce test n'affirme rien sur le message produit, et il passerait avec n'importe quel
-   prénom. Je reprends ici la réponse que je lui ai faite, en opposant deux écoles de
-   test sur ce test précis. »
-   → chaque fait vient de l'article ; la question devient celle du lecteur.
+✅ « Ce test unitaire n'affirme rien sur le message qu'il produit, et il passerait avec
+   n'importe quel prénom. Il vient d'eMush, un jeu multijoueur open source : en
+   février 2025, lors de la revue d'une merge request, un contributeur a buté dessus
+   sans comprendre ce qu'il vérifiait. Il avait de bonnes raisons. Deux écoles de test
+   répondent différemment, et on peut les opposer sur ce test précis. »
+   → le lecteur voit d'abord le test ; le déclencheur tient en une phrase ; chaque
+     fait vient de l'article.
 ```
 
 ## Grande idée : ce qu'il ne faut pas faire

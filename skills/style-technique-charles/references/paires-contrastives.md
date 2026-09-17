@@ -193,4 +193,5 @@ Ce qui a changé :
 - Jargon défini : rebase, branche de suivi distante, options de `git push`, rebase interactif ; documentation liée.
 - Incertitude sur l'IDE conservée mot pour mot, et **pas généralisée** : Charles ne sait pas l'expliquer (R3).
 - Frontière tirée d'un autre message de Charles ; son seuil reste en `[TK]`.
+- Limite de cette transposition : elle reste un cours. La version publiée a trouvé son pivot après entretien : « pendant près de trois ans, j'ai vu des contributeurs expérimentés obtenir un historique incohérent après un rebase sans comprendre pourquoi ». Ce vécu manquait à la matière ; aucune règle de transposition ne pouvait le produire.
 - Ni slogan, ni résumé, ni CTA.

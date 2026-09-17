@@ -1,7 +1,7 @@
 ---
 name: blog-technique-charles
 description: >
-  Transforme une matière technique brute (message, notes, brouillon, fil de revue de code) en article de blog technique qu'on a envie de cliquer, lire jusqu'au bout, retenir et partager, sans sacrifier la justesse. Skill de canal « blog » posé sur style-technique-charles : il choisit l'angle, le lecteur, la question ouverte et la preuve maîtresse, délègue l'écriture au skill de style, puis travaille titre, intro, intertitres, rétention, conclusion, CTA, packaging (description, slug) et messages de partage. Déclencheurs : article de blog, billet, rendre un article bankable, marketing éditorial, titre d'article, accroche, packaging, partager mon article, post LinkedIn / Hacker News / Reddit pour un article, pourquoi personne ne lit mon article. Français uniquement.
+  Transforme une matière technique brute (message, notes, brouillon, fil de revue de code) en article de blog technique qu'on a envie de cliquer, lire jusqu'au bout, retenir et partager, sans sacrifier la justesse. Skill de canal « blog » posé sur style-technique-charles : il mène un entretien sur le vécu, choisit l'angle, le lecteur, la question ouverte et la preuve maîtresse, délègue l'écriture au skill de style, puis travaille titre, intro, intertitres, rétention, conclusion, CTA, packaging (description, slug) et messages de partage. Déclencheurs : article de blog, billet, rendre un article bankable, marketing éditorial, titre d'article, accroche, packaging, partager mon article, post LinkedIn / Hacker News / Reddit pour un article, pourquoi personne ne lit mon article. Français uniquement.
 ---
 
 # Article de blog technique (Charles)
@@ -32,12 +32,12 @@ Arbitrages entre marketing et style :
 
 | Tentation marketing | Arbitrage |
 |---|---|
-| Créer un *knowledge gap* dans l'intro | Oui, mais la question vient du déclencheur réel. Jamais de question rhétorique, de chiffre choc ni de citation d'autorité |
-| *Open loops* entre sections | Le contenu crée le besoin (une limite, un contre-exemple, une objection). Jamais une formule de suspense (« Le plus étonnant ? ») |
+| Créer un *knowledge gap* dans l'intro | Oui, mais la question vient du déclencheur réel, d'un adversaire réel ou de l'objection du lecteur. Jamais de chiffre choc, de question de suspense ni de citation décorative |
+| *Open loops* entre sections | Le contenu crée le besoin (une limite, un contre-exemple, une objection). Le meilleur : un retournement réel, quand la matière en contient un. Jamais une formule de suspense (« Le plus étonnant ? ») |
 | Intertitres informatifs | Un intertitre nomme l'étape ou l'état du cas, pas la thèse en titre de cours |
-| Humour, digressions, voix forte | N'en ajouter aucun. Garder ceux de la matière |
+| Humour, voix forte, image | Garder et assumer ceux de Charles (matière, entretien). Une image qui éclaire le mécanisme peut être proposée, et signalée à la remise. Aucune blague inventée, aucune digression |
 | Phrase finale mémorable | L'idée transmissible vit dans le corps, là où la démonstration la justifie. La conclusion donne la règle et sa frontière |
-| Signal d'expertise | Une phrase de contexte qui situe l'enjeu (« j'ai maintenu eMush pendant trois ans ») ; jamais de chiffres d'expertise (« 800 PR relues ») |
+| Signal d'expertise | Une phrase de contexte, et surtout le vécu de la lutte (« pendant près de trois ans, j'ai vu des contributeurs expérimentés […] sans comprendre pourquoi ») ; jamais de chiffres d'expertise (« 800 PR relues ») |
 | Idée partageable plus tranchée ou plus consensuelle | Interdit. Elle garde la force exacte de la position de Charles |
 
 ---
@@ -46,11 +46,13 @@ Arbitrages entre marketing et style :
 
 ```
 Qu'est-ce que Charles fournit ?
-├─ Matière brute                → COMPLET : tri → fiche → validation → rédaction → passe blog → packaging
+├─ Matière brute                → COMPLET : tri → entretien → fiche → validation → rédaction → passe blog → packaging
 ├─ Sujet seul                   → entretien de style-technique-charles + questions « Lecteur » et « Preuve » de la fiche
-├─ Article rédigé               → PASSE BLOG : fiche déduite du texte, goulet, corrections ciblées, packaging
+├─ Article rédigé               → PASSE BLOG : fiche déduite du texte, entretien court sur les cases vides, goulet, corrections ciblées, packaging
 └─ Article publié               → PARTAGE : messages par canal
 ```
+
+L'entretien suit l'arbre 1 de `style-technique-charles`. Il vient avant toute écriture, même quand la matière semble complète : un article rédigé manque presque toujours de vécu.
 
 ## Arbre 2 - La matière tient-elle un article ?
 
@@ -59,6 +61,7 @@ La matière contient-elle…
 ├─ une instance réelle (test, bug, diff, décision) ?   non → pas d'article : demander le cas
 ├─ une idée non évidente pour le lecteur visé ?        non → c'est une note ou un message, le dire
 ├─ une preuve observable (code, sortie, mesure) ?      non → demander, ou [TK] si c'est secondaire
+├─ une lutte (durée, fausse piste, erreur, adversaire) ?  non → la chercher en entretien ; sans elle, l'article prend un ton de cours
 ├─ deux grandes idées ?                                → deux articles : garder celle qui a la meilleure preuve
 └─ oui partout                                         → fiche éditoriale
 ```
@@ -71,6 +74,8 @@ Remplir **avant** d'écrire, depuis la matière seulement. Case vide → questio
 |---|---|---|
 | Lecteur | Qui a déjà vécu ce problème ? | Développeur qui maintient des tests unitaires pleins de mocks |
 | Déclencheur | Qu'est-ce qui a réellement lancé la réflexion ? | Un contributeur ne comprend pas ce qu'un test vérifie |
+| Vécu | Qu'est-ce que ce problème a coûté à Charles, et qui pensait le contraire ? | À demander : combien de revues avant de trancher contre les mocks ? |
+| Retournement | Quelle lecture le lecteur croit-il juste avant qu'elle tombe ? Case vide si aucun | Le test mocké semble protéger le code ; il casse au premier refactoring |
 | Question ouverte | Quelle question le lecteur possède-t-il assez pour vouloir la réponse ? | Que vérifie ce test, au juste ? |
 | Grande idée | La réponse, en une phrase que le lecteur pourrait répéter à un collègue | Un test mocké vérifie ses mocks : il casse quand on améliore le code, alors qu'il devait le protéger |
 | Preuve maîtresse | L'artefact qui fait dire « ah, c'est pour ça » | Le même refactoring : le test mocké échoue, le test par résultat passe |
@@ -100,7 +105,7 @@ Spécifique, pertinent, avec une tension. Compréhensible sans connaître le pro
 
 ### Règle 2 - L'intro pose la question en moins de ~200 mots
 
-Dans l'ordre de `style-technique-charles` (règle 1a) : déclencheur, instance, question ouverte. À la fin de l'intro, le lecteur sait de quoi on parle, pourquoi c'est intéressant, pourquoi Charles en parle, et ce qui reste à comprendre.
+Dans l'ordre de `style-technique-charles` (règle 1a) : situation du lecteur, instance, question ouverte, avec le déclencheur. Un adversaire réel peut ouvrir l'intro. Si le déclencheur est une lutte, lui laisser la place qu'elle mérite, dans la limite des ~200 mots. À la fin de l'intro, le lecteur sait de quoi on parle, pourquoi c'est intéressant, pourquoi Charles en parle, et ce qui reste à comprendre.
 
 - Couper les phrases méta qui n'apprennent rien (« il y a beaucoup à dire là-dessus »).
 - Annoncer la question, pas le plan ni le cours (« je résume l'opposition entre deux écoles »).
@@ -180,7 +185,7 @@ Aucun message de partage n'ajoute un fait, un chiffre ou une position absents de
 ## Workflow
 
 1. Choisir le mode (arbre 1).
-2. Trier la matière (arbre 2).
+2. Trier la matière (arbre 2), puis mener l'entretien et attendre les réponses.
 3. Remplir la fiche éditoriale. Nommer le goulet.
 4. Si l'article dépasse ~1 500 mots ou si l'angle est discutable, faire valider la fiche.
 5. Rédiger avec `style-technique-charles`, en lui passant la fiche comme contraintes de canal.
@@ -194,8 +199,9 @@ Aucun message de partage n'ajoute un fait, un chiffre ou une position absents de
 | Anti-pattern | Correction |
 |---|---|
 | Tout optimiser à la fois | Nommer un goulet, le traiter d'abord |
-| Intro qui annonce un cours ou un plan | Déclencheur → instance → question ouverte |
-| Question rhétorique ou suspense pour tenir le lecteur | Le contenu crée la question (limite, contre-exemple) |
+| Intro qui annonce un cours ou un plan | Situation du lecteur → instance → question ouverte, déclencheur en une ou deux phrases |
+| Article juste mais planplan : posture de cours, aucun vécu | Entretien ; lutte, adversaire et retournement réels |
+| Suspense fabriqué pour tenir le lecteur | Le contenu crée la question (limite, contre-exemple, retournement réel) |
 | Idée partageable qui adoucit ou durcit la position de Charles | Force exacte de la source |
 | Sortie d'erreur ou métrique « plausible » | Sortie réelle, ou `[TK]` |
 | Preuve maîtresse enterrée dans une section tardive sans être désirée | Un fait de l'instance, dans l'intro, la rend attendue |
@@ -208,13 +214,15 @@ Aucun message de partage n'ajoute un fait, un chiffre ou une position absents de
 
 - [ ] La fiche éditoriale est remplie depuis la matière ; les manques sont en `[TK]`.
 - [ ] Le titre ouvre une question sur un sujet explicite, sans contexte privé.
-- [ ] L'intro pose déclencheur, instance et question en moins de ~200 mots, sans phrase méta.
+- [ ] L'intro pose situation du lecteur, instance, question et déclencheur en moins de ~200 mots, sans phrase méta.
 - [ ] Un premier insight arrive avant le premier tiers.
 - [ ] Titre, intro, intertitres, code et conclusion racontent seuls l'article.
 - [ ] Chaque section pose une question, apporte une preuve ou fait avancer l'argument.
 - [ ] Toutes les sorties et mesures sont réelles.
 - [ ] La grande idée apparaît dans le corps, à la force exacte de la position de Charles.
 - [ ] La conclusion donne la règle et sa frontière ; le CTA est discret ou en `[TK]`.
+- [ ] L'entretien a été mené ; le vécu recueilli apparaît dans l'article.
+- [ ] Lu à voix haute, on sent que le sujet anime Charles.
 - [ ] La checklist de `style-technique-charles` passe toujours.
 
 Questions de relecture :

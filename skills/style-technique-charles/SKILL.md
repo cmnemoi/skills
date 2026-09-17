@@ -1,12 +1,12 @@
 ---
 name: style-technique-charles
 description: >
-  Écrit de la prose technique en français dans le style de Charles (cmnemoi). À utiliser quand Charles demande d'écrire, de transposer ou de réécrire un texte technique « dans mon style », « comme j'écrirais », « avec ma voix » - article de blog technique, billet, explication, documentation, retour d'expérience - à partir d'un message (Discord, Slack, GitLab…), de notes, d'un brouillon ou d'un simple sujet. Déclencheurs : article technique, billet de blog, transposer un message en article, écrire comme Charles, mon style, ma voix, réécrire ce brouillon. Capte le raisonnement (partir d'un enjeu réel, faire émerger une grande idée d'une petite instance transformée pas à pas, comparaison loyale, statut épistémique et affect, frontière de la règle) dans un article soutenu, ni scolaire ni érudit : jargon défini au besoin, liens vérifiés et références. Base commune des futurs skills de canal (blog, LinkedIn).
+  Écrit de la prose technique en français dans le style de Charles (cmnemoi). À utiliser quand Charles demande d'écrire, de transposer ou de réécrire un texte technique « dans mon style », « comme j'écrirais », « avec ma voix » - article de blog technique, billet, explication, documentation, retour d'expérience - à partir d'un message (Discord, Slack, GitLab…), de notes, d'un brouillon ou d'un simple sujet. Déclencheurs : article technique, billet de blog, transposer un message en article, écrire comme Charles, mon style, ma voix, réécrire ce brouillon. Capte le raisonnement (partir d'un enjeu réel, faire émerger une grande idée d'une petite instance transformée pas à pas, comparaison loyale, statut épistémique et affect, frontière de la règle) dans un article au registre direct (entre l'oral et le soutenu), vécu, ni scolaire ni érudit, après un entretien avec Charles : jargon défini au besoin, liens vérifiés et références. Base commune des futurs skills de canal (blog, LinkedIn).
 ---
 
 # Style technique de Charles
 
-Écrire comme Charles raisonne, dans un article au registre soutenu, lisible par quelqu'un qui ne connaît pas son contexte. Pas de marketing : les skills de canal (blog, LinkedIn) s'ajoutent par-dessus (voir « Contrat »).
+Écrire comme Charles raisonne et comme il vit son sujet, dans un registre direct, lisible par quelqu'un qui ne connaît pas son contexte. Le lecteur doit sentir que le problème a coûté quelque chose à Charles : du temps, une erreur, de l'agacement. Pas de marketing : les skills de canal (blog, LinkedIn) s'ajoutent par-dessus (voir « Contrat »).
 
 **Trait central : partir de ce qui a réellement mis Charles en mouvement, le réduire à une petite instance, puis faire émerger de ses transformations une idée générale.**
 
@@ -42,10 +42,10 @@ Français uniquement.
 | Couche | Qui la gère |
 |---|---|
 | Raisonnement : enjeu, grande idée, comparaison, certitude, affect, frontière | Ce skill |
-| Registre et genre : ton, longueur, accroche, présentation de l'auteur, CTA | Ce skill pour l'article soutenu, puis les skills de canal |
+| Registre et genre : ton, longueur, accroche, présentation de l'auteur, CTA | Ce skill pour l'article, puis les skills de canal |
 | Tics de prose IA : triades, fausses questions, slogans | `write-without-slop` |
 
-Charger `write-without-slop` avant d'écrire. En cas de conflit, ce skill l'emporte pour les marqueurs d'incertitude et d'affect de la source, les vraies questions et les parenthèses d'aparté. Marquer les faits manquants `[TK: ...]`.
+Charger `write-without-slop` avant d'écrire. En cas de conflit, ce skill l'emporte pour les marqueurs d'incertitude et d'affect de la source, les vraies questions et les parenthèses d'aparté. Chercher les faits et le vécu manquants en entretien (arbre 1) ; marquer `[TK: ...]` seulement ce qui manque encore après.
 
 Les blocs « Source » sont écrits vite, sur une messagerie : ne jamais imiter leur orthographe ni leur ponctuation. Leur attitude, elle, doit passer. Seuls les blocs ✅ montrent le registre visé (correspondances dans `references/registre-article.md`).
 
@@ -55,10 +55,11 @@ Les blocs « Source » sont écrits vite, sur une messagerie : ne jamais imiter 
 
 ### Règle 1 - Partir de l'enjeu, et en faire émerger la grande idée
 
-- **1a. Poser l'enjeu, sur une petite instance.** L'intro dit en deux ou trois phrases, à la première personne, la situation et ce qui a déclenché la réflexion. Aucun procédé d'accroche : ni question rhétorique, ni citation d'autorité, ni chiffre choc. L'instance suit : le plus petit cas où le problème reste visible (une fonction de dix lignes, un payload de trois clés). L'enjeu vient de la matière ou de Charles, jamais du modèle.
+- **1a. Poser l'enjeu, sur une petite instance.** L'intro part de la situation telle que le lecteur la rencontre dans son propre code, puis dit ce qui a déclenché la réflexion de Charles, et ce qu'elle lui a coûté si l'entretien le révèle. Le déclencheur légitime l'article ; il ne le cadre pas. Pas d'accroche fabriquée : ni chiffre choc, ni citation décorative, ni question de suspense. Deux entrées sont permises quand elles sont réelles : un adversaire (une position que Charles conteste, restituée loyalement) et la question que le lecteur se pose vraiment. L'instance suit : le plus petit cas où le problème reste visible (une fonction de dix lignes, un payload de trois clés). L'enjeu vient de la matière ou de Charles, jamais du modèle.
 - **1b. Transformer cette même instance.** Chaque version rend visible quelque chose de nouveau, et l'enjeu motive le passage à la suivante, sans être rappelé comme une formule. Le code est une étape de la démonstration : jamais « explication complète, puis snippet final ».
 - **1c. Relier chaque transformation à la grande idée.** Après une étape significative, dire ce qu'elle révèle du problème général. Ne pas chercher un nom établi pour chaque phénomène rencontré : les concepts arrivent au service d'un raisonnement déjà en cours, pas l'inverse.
 - **1d. Revenir au cas.** La transformation suivante teste l'idée, la compare à une autre solution (règle 2) ou en cherche la limite (règle 4). Sans formule répétée : un « Revenons à… » par article suffit.
+- **1e. Construire le retournement, s'il existe.** Quand la matière ou l'entretien contient un retournement réel (une solution qui semblait bonne et qui échoue, une erreur de Charles, un changement d'avis, un problème mal posé), l'article s'organise autour : le lecteur croit d'abord à la première lecture, puis la voit tomber. Ne jamais en fabriquer un. Un pivot par article au plus ; sans retournement réel, la progression reste linéaire, et c'est très bien.
 
 > *« […] its concepts have been introduced in an order that is best for human understanding, using a mixture of formal and informal methods that reïnforce each other. »*
 > — Donald Knuth, *Literate Programming*
@@ -100,7 +101,9 @@ L'IA efface les deux : les doutes et l'agacement.
 
 - Ne jamais transformer une observation en mécanisme, une préférence en principe, une hypothèse en fait. Une observation que Charles ne sait pas expliquer reste une observation (paire 2).
 - Ne pas supprimer les atténuations (« peut-être », « je ne saurais pas expliquer ») ; ne pas ajouter de renforcements (« clairement », « le plus courant »). Garder ceux de Charles (« il faut impérativement »).
-- Garder l'affect avec sa force, sobrement : un mot juste, pas une image. L'affect le plus utile explique un critère de design. Ne rien dramatiser, ne rien ajouter.
+- Garder l'affect avec sa force, sans l'aplatir : « ça me fait chier » ne devient pas « c'est regrettable ». Une tournure franche (« Absolument pas. », « franchement », « c'est pénible ») a sa place. L'affect le plus utile explique un critère de design. Ne pas dramatiser au-delà de la source.
+- Garder la forme quand elle porte l'attitude : une question, un retournement ou une phrase-coup de la source restent une question, un retournement, une phrase-coup.
+- Une image ou une analogie (« on lui demande ses papiers d'identité ») peut être proposée par le modèle si elle éclaire le mécanisme sans ajouter ni fait ni émotion. La signaler à la remise.
 
 ```
 Source : « Ah ben non en faite : `getSkillByName` renvoie `null` si le joueur n'a pas
@@ -109,9 +112,12 @@ Source : « Ah ben non en faite : `getSkillByName` renvoie `null` si le joueur n
 ❌ Ton de manuel : « À la lecture, ce code ne semble poser aucun problème. Pourtant,
     `getSkillByName` renvoie `null` […], et le jeu plante en production. »
 
-✅ « À la lecture, je ne vois rien d'anormal. Sauf que `getSkillByName` renvoie
-    `null` quand le joueur n'a pas la compétence, et le jeu plante en production.
-    Rien, ici, ne ressemblait à une erreur. »
+❌ Aplati : « À la lecture, je ne vois rien d'anormal. Sauf que `getSkillByName`
+    renvoie `null` […] » → la question et le retournement de la source ont disparu.
+
+✅ « Ce code n'a aucun problème, n'est-ce pas ? Eh bien non. `getSkillByName`
+    renvoie `null` quand le joueur n'a pas la compétence, et le jeu plante en
+    production. »
 ```
 
 ```
@@ -175,13 +181,19 @@ Test de relecture : **si je retire ce nom de notion ou d'auteur, l'argument perd
 
 ```
 Qu'est-ce que Charles fournit ?
-├─ Une matière brute (message, notes, brouillon, transcription)  → TRANSPOSITION (par défaut)
-├─ Un sujet seul                                                 → GÉNÉRATION GUIDÉE : questions d'abord
-├─ Un texte à « rendre plus Charles »                             → TRANSPOSITION ; affirmation sans appui → [TK]
+├─ Une matière brute (message, notes, brouillon, transcription)  → ENTRETIEN COURT, puis TRANSPOSITION (par défaut)
+├─ Un sujet seul                                                 → ENTRETIEN COMPLET, puis GÉNÉRATION GUIDÉE
+├─ Un texte à « rendre plus Charles »                             → ENTRETIEN COURT, puis TRANSPOSITION ; affirmation sans appui → [TK]
 └─ Un brouillon à relire                                         → RELECTURE : écarts aux règles, sans réécrire
 ```
 
-Questions d'entretien, en un seul message :
+L'entretien vient avant toute écriture, sauf en relecture. Une matière brute contient le raisonnement, presque jamais le vécu : un message écrit d'un jet ne dit ni combien de temps le problème a duré, ni qui pensait le contraire.
+
+- **Entretien court** : seulement les questions dont la réponse manque dans la matière, en un seul message. Le vécu manque presque toujours : ne jamais le sauter.
+- **Entretien complet** : toutes les questions, en un seul message.
+- Relancer une fois si une réponse ouvre un retournement ou une lutte. Si Charles demande d'écrire tout de suite, écrire avec des `[TK]`.
+
+**Raisonnement**
 
 1. Qu'est-ce qui t'a donné envie d'écrire là-dessus ?
 2. Quel est le plus petit cas concret qui montre le problème ?
@@ -190,6 +202,14 @@ Questions d'entretien, en un seul message :
 5. Qu'as-tu vu toi-même, et que supposes-tu seulement ?
 6. Quelles autres solutions as-tu envisagées, et que coûtent-elles ?
 7. Dans quel cas ta recommandation ne tient plus ?
+
+**Vécu**
+
+8. Combien de temps as-tu tourné autour de ce problème, et par quelles fausses pistes es-tu passé ?
+9. Sur quel point t'es-tu trompé, ou as-tu changé d'avis ?
+10. Qui pense le contraire, et que lui réponds-tu ?
+11. Qu'est-ce qui t'agace, t'amuse ou te plaît dans ce sujet ?
+12. Quelle image ou analogie utilises-tu quand tu l'expliques à l'oral ?
 
 ## Arbre 2 - D'où vient l'affirmation ?
 
@@ -207,9 +227,11 @@ Questions d'entretien, en un seul message :
 ```
 ├─ Question
 │   ├─ Vraie bifurcation, ou question réelle du lecteur qui lance l'étape suivante  → garder
+│   ├─ Objection du lecteur, ou question déjà dans la source (« Est-ce grave ? »)  → garder
 │   └─ Suspense (« La cause ? », « Le plus étonnant ? »)                            → affirmation
 ├─ Phrase courte ou ironique
 │   ├─ Renverse une évaluation qui vient d'être posée, ou présente dans la source   → garder
+│   ├─ Assène une position de Charles (« Absolument pas. »)                        → garder
 │   └─ Solennise (professionnalisme, essentiel, mérite)                            → supprimer
 └─ Heading
     ├─ Changement d'état majeur de l'instance ou de niveau de raisonnement           → heading sobre
@@ -217,13 +239,13 @@ Questions d'entretien, en un seul message :
     └─ Trois paragraphes viennent de passer                                          → pas de heading
 ```
 
-Ironie et parenthèses : fréquence chez Charles inconnue. Garder celles de la matière, n'en ajouter aucune.
+Ironie, humour et parenthèses : garder ceux de la matière et de l'entretien. N'inventer aucune blague.
 
 ---
 
 ## Workflow
 
-1. Choisir le mode (arbre 1).
+1. Choisir le mode et mener l'entretien (arbre 1). Attendre les réponses avant d'écrire.
 2. Lire `references/paires-contrastives.md` et `references/registre-article.md`. Si la matière est mince, lire aussi `references/extraits.md`.
 3. Relever l'enjeu : ce qui a déclenché la réflexion, et ce que Charles en pense. S'il manque, demander ou `[TK]`.
 4. Formuler la grande idée en une phrase.
@@ -233,18 +255,20 @@ Ironie et parenthèses : fréquence chez Charles inconnue. Garder celles de la m
 8. Trouver et vérifier les liens (règle 6).
 9. Au-delà de ~1 500 mots, faire valider la grande idée, la chaîne et un plan avant d'écrire.
 10. Écrire, puis vérifier avec la checklist.
-11. Remettre le texte, puis : les `[TK]`, les liens avec le titre de page constaté, les affirmations dont la force a changé (normalement aucune).
+11. Remettre le texte, puis : les `[TK]`, les liens avec le titre de page constaté, les affirmations dont la force a changé (normalement aucune), les images proposées par le modèle.
 
 ## Anti-patterns
 
 | Anti-pattern | Correction |
 |---|---|
-| Ton de manuel : exact, calme, sans enjeu | Poser l'enjeu dans l'intro et le laisser motiver chaque étape (1a, 1b) |
+| Ton de manuel : exact, calme, sans enjeu ni vécu | Poser l'enjeu dans l'intro, le laisser motiver chaque étape (1a, 1b), aller chercher le vécu en entretien |
+| Voix aplatie : question, retournement ou tournure franche de la source lissés en prose neutre | Garder la forme quand elle porte l'attitude (règle 3) |
 | Musée des concepts : chaque notion nommée, définie, attribuée, liée | Une grande idée ; outils en lien discret ; auteurs dans « Références » |
 | Digression sur une connexion intéressante (`Option` / `Result`, autres langages) | Couper, ou garder pour un autre article |
-| Voix de tutoriel (« Déplaçons… », « Revenons à… », « Il faut… » en série) | « je » pour ce que Charles a fait et pense |
+| Voix de tutoriel (« Déplaçons… », « Revenons à… », « Il faut… » en série) | Le code ou la valeur comme sujet ; tournure impersonnelle |
+| Narration pas à pas de l'auteur (« je suis parti de… », « j'ajoute… ») | Ce que fait le code et ce qu'il révèle. À distinguer de la lutte réelle (fausse piste, erreur, changement d'avis), qui se raconte |
 | Headings de cours qui énoncent chaque thèse | Headings sobres |
-| Ouverture sur l'importance du sujet, une citation d'autorité ou une accroche fabriquée | Intro naturelle sur l'enjeu, puis l'instance |
+| Ouverture sur l'importance du sujet, une citation décorative ou une accroche fabriquée | Intro naturelle sur l'enjeu, puis l'instance |
 | Narration d'expertise (« j'ai reviewé 800 PR ») | Supprimer. À distinguer de l'enjeu vécu (« j'ai trouvé la cause trois appels plus loin »), qui se garde |
 | Généralisation reléguée à la conclusion | Relier chaque transformation à la grande idée (1c) |
 | Explication complète, puis snippet final | Code découpé en états, chacun motivé par la prose |
@@ -271,11 +295,14 @@ L'expertise se démontre par la grande idée qu'on fait émerger et par sa front
 - [ ] Aucune digression ni notion secondaire ne détourne de cette idée.
 - [ ] Les options comparées portent sur le même cas, avec leurs coûts.
 - [ ] Aucune affirmation n'a changé de force, doute ou affect ; rien n'est inventé ; les manques sont en `[TK]`.
+- [ ] L'entretien a été mené (sauf demande contraire) ; le retournement est construit s'il existe, jamais fabriqué.
+- [ ] « je » sert au déclencheur, à la lutte, aux observations, opinions, doutes et affects ; jamais à une narration pas à pas.
 - [ ] Seul le jargon nécessaire est défini, sans mini-leçon.
 - [ ] Aucun auteur n'est cité dans la prose sans que sa position serve l'argument.
 - [ ] Chaque lien a été ouvert et traite la notion ; « Références » les reprend.
 - [ ] La conclusion donne une règle et sa frontière.
-- [ ] Le registre est soutenu, ni pompeux, ni scolaire.
+- [ ] Le registre est direct : ni messagerie, ni pompeux, ni scolaire.
+- [ ] Lu à voix haute, l'article laisse entendre que le sujet anime Charles.
 - [ ] `write-without-slop` a été appliqué.
 
 ## Fichiers de référence
@@ -284,11 +311,12 @@ L'expertise se démontre par la grande idée qu'on fait émerger et par sa front
 |---|---|
 | [references/paires-contrastives.md](references/paires-contrastives.md) | Source / contre-exemple / transposition rédigée : proposition d'API, rebase |
 | [references/extraits.md](references/extraits.md) | Extraits de messages de Charles, classés par règle |
-| [references/registre-article.md](references/registre-article.md) | Correspondances messagerie → article soutenu : surface, voix, certitude, affect |
+| [references/registre-article.md](references/registre-article.md) | Correspondances messagerie → article direct : registre, surface, voix, certitude, affect |
 
 ## Sources
 
 - **[Literate Programming](https://doi.org/10.1093/comjnl/27.2.97)** — Donald Knuth, *The Computer Journal* 27(2), 97-111 (1984) - ordre d'exposition pour l'humain, mélange du code et de la prose
+- **[Writer-Based Prose: A Cognitive Basis for Problems in Writing](https://doi.org/10.58680/ce197916016)** — Linda Flower, *College English* 41(1), 19-37 (1979) - la prose centrée sur l'auteur suit le chemin narratif de sa pensée ; la prose centrée sur le lecteur la transforme (voix, règle 1a)
 - **[Register, Genre, and Style](https://doi.org/10.1017/CBO9780511814358)** — Douglas Biber & Susan Conrad, Cambridge University Press (2009) - distinction registre / genre / style
 - **[Stance and engagement: a model of interaction in academic discourse](https://doi.org/10.1177/1461445605050365)** — Ken Hyland, *Discourse Studies* 7(2), 173-192 (2005) - atténuations, renforcements et marqueurs d'attitude
 - **[The Uses of Argument](https://doi.org/10.1017/CBO9780511840005)** — Stephen Toulmin, Cambridge University Press (éd. mise à jour 2003) - conclusion avec sa force et ses exceptions

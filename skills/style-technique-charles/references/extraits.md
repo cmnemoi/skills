@@ -1,6 +1,6 @@
 # Extraits de messages de Charles
 
-Messages Discord (2022-2026), classés par règle. Ils montrent des mouvements de raisonnement, jamais le ton à produire. Les extraits déjà cités dans `SKILL.md` ou dans les paires ne sont pas repris ici.
+Messages Discord (2022-2026), classés par règle. Ils montrent des mouvements de raisonnement et une attitude ; la surface se transpose (`registre-article.md`). Les extraits déjà cités dans `SKILL.md` ou dans les paires ne sont pas repris ici.
 
 ---
 
@@ -147,7 +147,7 @@ Je regardais ça aussi côté Symfony : https://symfony.com/doc/current/messenge
 
 ## Vécu et affect (règles 1a et 3)
 
-La douleur est dite en passant, brièvement, souvent avec autodérision. Jamais en ouverture dramatique.
+Sur Discord, la douleur est dite en passant, brièvement, souvent avec autodérision. Dans un article, elle peut prendre plus de place quand l'entretien la confirme : c'est elle qui montre que le sujet a coûté quelque chose. Autodérision plutôt que pathos.
 
 - « J'ai un bug assez gênant » + la stack trace.
 - « le jeu va planter en production 🤷 »
