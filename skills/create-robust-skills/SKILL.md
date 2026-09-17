@@ -12,7 +12,7 @@ A comprehensive guide for creating maintainable, well-documented agent skills fo
 | Use When | Skip When |
 |----------|-----------|
 | Creating a new skill from scratch | Just need quick help with code |
-| Improving existing skills | Writing一次性 scripts |
+| Improving existing skills | Writing one-shot scripts |
 | Reviewing skill quality | Simple one-off tasks |
 | Teaching others about skills | Already have a working skill |
 | Standardizing skill format | Emergency hotfix |
