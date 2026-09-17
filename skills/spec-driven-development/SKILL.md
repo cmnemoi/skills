@@ -70,9 +70,9 @@ Is the behavior triangulated?
 
 ---
 
-## Recommended Workflow
+## Workflow
 
-Use the lightest workflow that still preserves intent.
+Use the lightest workflow that still preserves intent: spec first, tests second, code third.
 
 1. Write or update the spec.
 2. Write tests linked to the spec.
@@ -80,10 +80,14 @@ Use the lightest workflow that still preserves intent.
 4. Revise the spec if tests or implementation reveal a missing rule.
 5. Review alignment before merge.
 
+On an existing system, start by extracting or repairing the relevant spec, then follow the same order.
+
 Two human checkpoints matter more than extra documents:
 
-1. Before implementation: confirm the spec and acceptance criteria are sufficient.
-2. Before merge: confirm spec, tests, and code still say the same thing.
+1. Before implementation: the spec and acceptance criteria are sufficient.
+2. Before merge: spec, tests, and code still say the same thing.
+
+None of this requires code generation or spec-as-source dogma.
 
 ---
 
@@ -141,53 +145,90 @@ For each important rule, ask:
 
 ---
 
+## Adversarial Spec Review
+
+A spec that reads well is not yet a good spec. Before planning or coding, **try to break it**: find the rule that is false, ambiguous, or missing while it is still cheap to fix.
+
+For each important rule, ask:
+
+- Which business assumption could simply be wrong?
+- Which nominal or edge case would produce an incorrect answer under this rule?
+- Which external failure or missing data is left undefined?
+- Which rule contradicts behavior the system already has?
+- Which scenario would pass with a shallow implementation but be wrong in production?
+- Which non-functional requirement that really matters is not observable anywhere?
+
+A rule that cannot be attacked at all is usually too vague to test.
+
+### ZOMBIES: a search grid for missing behavior
+
+```text
+Z — Zero        : absence, empty input, no result
+O — One         : minimal case with a single element
+M — Many        : several elements, repetition, volume
+B — Boundary    : thresholds, limits, extreme formats
+I — Interface   : public contract or external boundary
+E — Exceptional : error, timeout, unavailability, invalid input
+S — Simple      : the minimal nominal scenario
+```
+
+Keep **only the dimensions that carry risk**.
+
+```
+Which ZOMBIES dimensions apply here?
+├─ Collection, list, or search result       → Zero, One, Many
+├─ Threshold, quota, date, size, format     → Boundary
+├─ Public contract or external call         → Interface, Exceptional
+├─ Depends on a system that can fail        → Exceptional
+└─ Pure deterministic transformation        → Simple, Boundary
+```
+
+It is a grid for finding defects, not a quota: seven dimensions per rule is padding, not strength.
+
+**Exceptional needs a decision, not a reflex.** A functional edge case (empty result, expired membership, a quantity on the threshold) is a rule you can decide and write today. A technical failure mode (timeout, concurrent write, partial outage) becomes a spec rule only once the business has an answer for it. If nobody has decided, write the question rather than an invented rule: specifying a retry or a reconciliation nobody asked for commits the implementation to machinery that costs forever.
+
+```md
+<!-- ❌ Happy path only: nothing here can be wrong -->
+- When the customer searches for a product, matching products are returned.
+
+<!-- ✅ Attacked: the failing and empty cases are decided, not implied -->
+- When the query matches nothing, an empty result is returned, not an error.
+- When the catalog service is unavailable, the search fails explicitly instead of returning an empty result.
+```
+
+### Make important non-functional rules observable
+
+A violated non-functional requirement (latency, a size limit, an ordering guarantee, a retention rule) is a real defect. When one genuinely matters, state it as an observable rule with acceptance criteria; otherwise put it in **Out of scope** on purpose.
+
+Do not promote every maintainability preference to a spec rule: it inflates the spec and blurs impact, risk, and debt.
+
+### When to stop
+
+A system always has more potential defects than anyone will find, so a spec is never finished "because no case is left". Stop when the marginal cost of hunting one more case exceeds the criticality of what you would find, record the risks you knowingly accept in **Out of scope**, and never claim exhaustiveness.
+
+---
+
 ## Traceability with Stable IDs
 
-The most useful SDD habit is explicit linking inside the repo.
-
-Assign each behavior a stable ID following the format: `(bounded-context).subdomain.feature::business-rule`
-
-Examples:
-
-- `checkout.pricing.applies-member-discount::member-discount-applied`
-- `search.product.find-by-query::partial-matches-allowed`
-- `auth.session.security::expires-after-inactivity`
-
-Then link that ID in:
-
-1. the spec
-2. at least one test
-3. at least one implementation location
-
-### Spec example
+The most useful SDD habit is explicit linking inside the repo. Give each behavior a stable, behavior-oriented ID such as `checkout::applies-member-discount` or `auth.session::expires-after-inactivity`, then reference it in the spec, in at least one test, and in at least one implementation location.
 
 ```md
 ### Member discount is applied
 
-`{#checkout.pricing.applies-member-discount::member-discount-applied}`
+`{#checkout::applies-member-discount}`
 
 When a signed-in member confirms checkout, the final total includes the member discount.
 ```
 
-### Test example
-
 ```ts
-/** @spec checkout.pricing.applies-member-discount::member-discount-applied */
-it("applies the member discount at checkout", () => {
-  // ...
-});
+/** @spec checkout::applies-member-discount */
+it("applies the member discount at checkout", () => { /* ... */ });
+
+/** @spec checkout::applies-member-discount */
+function computeCheckoutTotal(input: CheckoutInput): Money { /* ... */ }
 ```
 
-### Code example
-
-```ts
-/** @spec checkout.pricing.applies-member-discount::member-discount-applied */
-function computeCheckoutTotal(input: CheckoutInput): Money {
-  // ...
-}
-```
-
-Coverage rule: a behavior is only solid when the repo contains the full triangle.
+A behavior is only solid when the repo contains the full triangle. [references/SPEC-TEMPLATE.md](references/SPEC-TEMPLATE.md) holds the ID conventions and what to avoid.
 
 ---
 
@@ -206,59 +247,27 @@ Acceptance criteria are the operational heart of the spec.
 - Given a guest with the same items, when checkout is confirmed, then the final total remains unchanged.
 ```
 
-Good criteria talk about domain truth, not mechanics like clicking buttons or posting to endpoints.
+Good criteria describe domain truth, not clicks and endpoints.
 
 ---
 
 ## Spec Variants
 
-### Feature Spec
+| Variant | Use it when | Contains |
+|---------|-------------|----------|
+| **Feature spec** | New behavior or an extension | Intent, scope, behavioral rules, acceptance criteria, out of scope |
+| **Design-first spec** | Architecture or constraints are already fixed | The externally relevant constraints and the behavior the design must preserve |
+| **Bugfix spec** | Fixing a defect without widening scope | Reproduction, current behavior, expected behavior, unchanged behavior |
 
-Use for new behavior or an extension of existing behavior.
+The three templates live in [references/SPEC-TEMPLATE.md](references/SPEC-TEMPLATE.md). A design-first spec still describes behavior, not an implementation narrative, and a bugfix spec exists to stop the agent from "fixing" more than intended.
 
-Include:
+**Reproduce before fixing.** The first deliverable of a bugfix is not the fix, it is a failing test:
 
-- intent
-- scope
-- behavioral rules
-- acceptance criteria
-- out of scope
-
-### Design-First Spec
-
-Use when architecture or technical constraints are already known and the main job is to define the behavior that design must support.
-
-Include:
-
-- required constraints that are externally relevant
-- the behavior the chosen design must preserve
-- acceptance criteria validating that behavior
-
-Do not turn the spec into an implementation narrative.
-
-### Bugfix Spec
-
-Use when fixing a bug without allowing scope drift.
-
-Minimum structure:
-
-```md
-## Current behavior
-
-What happens today and why it is wrong.
-
-## Expected behavior
-
-What must happen after the fix.
-
-## Unchanged behavior
-
-What must remain untouched.
+```text
+observed defect -> minimal reproduction -> RED test -> fix -> suite GREEN -> permanent regression guard
 ```
 
-This format prevents the agent from "fixing" more than intended.
-
----
+Fixing first is how the wrong mechanism gets repaired and declared fixed because the incident stopped reproducing by hand. The red test separates the defect's existence from your explanation of it.
 
 ## File and Granularity Rules
 
@@ -274,70 +283,11 @@ Only add more artifacts when there is a real reason:
 
 Do not create a PRD, design doc, task list, data model, and quickstart by default for a feature that fits in one short spec.
 
-The right amount of process reduces cognitive load. It does not move the work from code to markdown.
+Process should reduce the reader's work, not move the work from code to markdown.
 
 ---
 
-## Implementation Pattern
-
-Use this execution order unless there is a strong reason not to:
-
-1. Spec first
-2. Tests second
-3. Code third
-
-When updating an existing system:
-
-1. extract or repair the relevant spec
-2. write or update tests against that spec
-3. change the implementation
-4. reconcile any newly discovered rule back into the spec
-
-This is still pragmatic SDD. It does not require code generation or spec-as-source dogma.
-
----
-
-## Examples
-
-### Minimal spec template
-
-```md
-# Checkout Discount
-
-## Why
-
-Members should automatically receive their negotiated discount at checkout.
-
-## Scope
-
-This spec covers discount application in the final checkout total.
-
-## Rules
-
-### Member discount is applied
-
-`{#checkout.pricing.applies-member-discount::member-discount-applied}`
-
-When a signed-in member confirms checkout, the final total includes the member discount.
-
-### Guest users do not receive the discount
-
-`{#checkout.pricing.applies-member-discount::guest-no-discount}`
-
-When a guest confirms checkout, no member discount is applied.
-
-## Acceptance criteria
-
-- Given a signed-in member with eligible items, when checkout is confirmed, then the final total reflects the member discount.
-- Given a guest with the same items, when checkout is confirmed, then the final total remains unchanged.
-
-## Out of scope
-
-- Coupon stacking
-- Loyalty points
-```
-
-### Good vs bad spec language
+## Good vs Bad Spec Language
 
 ```md
 <!-- ❌ Too technical -->
@@ -374,26 +324,21 @@ it("applies the member discount at checkout", () => {
 | Spec too technical too early | Mixes intent with implementation | Keep the spec behavioral |
 | Swarm of sub-agents | Coordination costs more than it helps | Keep one main agent and a short workflow |
 | Tests/code without `@spec` links | Weak traceability | Add explicit stable references |
+| Happy-path spec | Only confirms the author's intuition; the failure modes stay undecided | Run an adversarial review and decide the relevant ZOMBIES cases |
+| ZOMBIES as a quota | Seven dimensions per rule inflate the spec without adding risk coverage | Keep only the dimensions that carry real risk |
+| Fix-then-spec bugfix | The fix may address the wrong mechanism, with no lasting guard | Reproduce first, red test first |
 
 Practical heuristic: if a spec generates more than about 10 tasks for less than 3 days of work, it is probably too granular.
 
 ---
 
-## How This Works with ATDD
-
-This skill pairs naturally with `dsl-driven-testing`.
-
-- The spec defines the behavior and acceptance criteria.
-- Acceptance tests should speak domain language.
-- Technical details belong in adapters, drivers, or helper layers, not in the spec itself.
-
-Pipeline:
+## Working with ATDD
 
 ```text
 spec -> acceptance criteria -> executable tests -> code
 ```
 
-If you need help designing acceptance tests that stay stable across in-memory, API, and UI execution levels, load `dsl-driven-testing` alongside this skill.
+The spec defines behavior and acceptance criteria; the tests speak domain language; technical details belong in adapters, drivers, or helpers. Load [`dsl-driven-testing`](../dsl-driven-testing/SKILL.md) alongside this skill for acceptance tests that stay stable across in-memory, API, and UI levels, and [`write-unit-tests`](../write-unit-tests/SKILL.md) for the test posture itself.
 
 ---
 
@@ -407,9 +352,22 @@ Before considering the work complete, verify:
 - tests reference the relevant `@spec` IDs
 - implementation references the relevant `@spec` IDs
 - spec, tests, and code do not contradict each other
+- the spec went through an adversarial review instead of only being proofread
+- the ZOMBIES dimensions that carry risk are decided, and the irrelevant ones are left out
+- important non-functional requirements are observable or explicitly out of scope
+- a bugfix spec carries a reproduction, and the red test came before the fix
 - the workflow stayed proportionate to the problem size
 
 ---
+
+## Reference Documentation
+
+| File | Purpose |
+|------|---------|
+| [references/SPEC-TEMPLATE.md](references/SPEC-TEMPLATE.md) | Feature, bugfix, and design-first templates, ID conventions, writing heuristics |
+| [examples/exchange-body.md](examples/exchange-body.md) | A worked spec |
+| [../write-unit-tests/SKILL.md](../write-unit-tests/SKILL.md) | Turning attacked rules into tests |
+| [../dsl-driven-testing/SKILL.md](../dsl-driven-testing/SKILL.md) | Acceptance test architecture |
 
 ## Sources
 
@@ -428,5 +386,6 @@ Before considering the work complete, verify:
 - [Spec Kit Agents: Context-Grounded Agentic Workflows](https://arxiv.org/abs/2604.05278)
 
 ### Related practices
+- Yegor Bugayenko, *Angry Tests*: testing as defect search, and the unbounded-defect view behind the stopping rule. See [`write-unit-tests/references/ANGRY-TESTS.md`](../write-unit-tests/references/ANGRY-TESTS.md)
 - [Dan North - Introducing BDD](https://dannorth.net/blog/introducing-bdd/)
 - [Martin Fowler - Specification by Example](https://martinfowler.com/bliki/SpecificationByExample.html)

@@ -55,6 +55,10 @@ Use this variant when you need to fix behavior without widening scope.
 
 <What is broken and why it matters>
 
+## Reproduction
+
+<Minimal conditions under which the defect is observed - this becomes the first failing test>
+
 ## Current behavior
 
 <What happens today>

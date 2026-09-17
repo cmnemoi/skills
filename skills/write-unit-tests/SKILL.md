@@ -52,6 +52,127 @@ Even in brownfield code, prefer **incremental DSL adoption** around new work, pa
 6. **Use mocks only as a last resort** for outbound commands/side effects you cannot observe otherwise.
 7. **Structure every test with Arrange, Act, Assert**, even when the scenario is wrapped in a business-language layer.
 8. **Treat coverage as a diagnostic, not the goal.**
+9. **Try to break the behavior before confirming it.** Look for the input, error, or boundary that makes the code lie.
+
+## Angry Tests: Try to Break the Code
+
+A test earns its place by **finding a defect**. A suite you can never make red proves nothing.
+
+For each important behavior, hunt the input that makes the code lie, the missing rule, the realistic failure. Check that absence, unknown data, unavailability, and invalid input stay distinguishable whenever the spec says they differ.
+
+```python
+# ❌ Confirms the author's intuition
+def test_returns_products():
+    assert search("chair").items == [chair]
+
+# ✅ Attacks the assumption: no match and backend down are different truths
+def test_unknown_query_returns_empty_result_without_error():
+    assert search("zzz").items == []
+
+def test_unavailable_catalog_fails_explicitly_instead_of_looking_empty():
+    with pytest.raises(CatalogUnavailable):
+        search("chair", catalog=UnavailableCatalog())
+```
+
+### ZOMBIES: choosing which scenarios to write
+
+```text
+Z — Zero        : absence, empty input, no result
+O — One         : minimal case with a single element
+M — Many        : several elements, repetition, volume
+B — Boundary    : thresholds, limits, extreme formats
+I — Interface   : public contract or external boundary
+E — Exceptional : error, timeout, unavailability, invalid input
+S — Simple      : the minimal nominal scenario
+```
+
+Keep only the dimensions that carry risk: this is a search grid, not a quota. `spec-driven-development` attacks the spec with the same grid, so reuse its conclusions instead of re-deriving them.
+
+### Business edge cases are cheap, technical ones are not
+
+A business edge case costs one test: empty cart, expired membership, duplicate name, a quantity sitting on the threshold. Be liberal with those.
+
+A technical edge case usually costs a **mechanism**: a retry, an optimistic-lock check, a compensating write, a `try/except` that swallows. That is an architecture decision with a permanent cost, and a test demanding it freezes it before anyone chose it.
+
+Before writing a test that forces one, answer three questions:
+
+1. Does this failure actually happen in this system, or is it hypothetical?
+2. Does the spec say what the business wants when it happens?
+3. Is the honest answer "fail loudly and let the caller decide"?
+
+No answer to (2) means you found a question for the spec or the design, not a test to write. Raise it. Until it is decided, let the error propagate: a `try/except` that hides a failure is worse than the failure.
+
+```python
+# ❌ Invents a retry policy nobody specified, and freezes it in the suite
+def test_retries_three_times_when_the_catalog_times_out(): ...
+
+# ✅ Pins the decided business outcome; the mechanism stays free to change
+def test_catalog_timeout_surfaces_as_unavailable_to_the_caller(): ...
+```
+
+### Hostile strategies
+
+Pick one per risky area, not all of them every time.
+
+| Strategy | What it exposes |
+|----------|-----------------|
+| Irregular values (empty, blanks, unicode, very long, extreme numbers) | Hidden assumptions about shape and size |
+| Different data per test, seeded randomization | Tests that only pass on their one fixture |
+| Repeating a scenario | Residual state, leaks, order dependence |
+| Concurrency, non-deterministic ordering | Races and shared mutable state |
+| Degraded boundary (timeout, unavailable, partial response) | Error paths nobody designed |
+| Volume, quotas, descriptors, memory | Resource handling invisible in memory |
+
+### Fast and deep
+
+A second axis over unit/integration: it sorts tests by **feedback latency and detection depth**, not by label.
+
+| Dimension | Fast | Deep |
+|-----------|------|------|
+| Purpose | immediate feedback, localization | integration / environment defects |
+| Expected cost | very low | accepted as higher |
+| Reality used | controlled, fakes allowed | real or realistic resources |
+| Mostly run by | the developer while coding | CI / build / release |
+| Typical failure | a local contract broke | an interaction, resource, or system invariant broke |
+
+An in-memory test can prove a function reads a stream and never reveal a file-descriptor leak; opening many real files does. **The cost is sometimes exactly what lets the test see the bug.** Default to the fast loop; go deep only where the real boundary carries the risk.
+
+### Bug, red, fix
+
+```text
+observed bug -> minimal reproduction -> RED test -> locate -> fix -> suite GREEN
+```
+
+Never fix first: the red test separates the defect's existence from your explanation of it, and leaves a permanent guard. When a deep test reddens, add fast tests around the suspect components until the failure is local instead of reaching for a debugger.
+
+### Make the red diagnostic
+
+A red nobody can act on is half a test: name it like a sentence, make the failure message state the expected business outcome, and keep the local reproduction to one command.
+
+### Angry, not dogmatic
+
+The posture has failure modes of its own. Hold these limits:
+
+- **Overlap** is worth it only when the two tests detect through **independent** paths; two copies of one scenario are pure cost.
+- **Flakiness** is acceptable only for a modeled probabilistic phenomenon, with repetition, a policy, and an owner. Otherwise it is a defect of the suite.
+- **One assertion per test** is a readability heuristic, not a law; cohesive assertions about one result can improve the diagnostic.
+- What matters about fixtures is **state independence**, not a syntactic ban on shared setup.
+- Do not requalify every maintainability imperfection as a bug: keep impact, risk, and debt distinct.
+- Angry is not random, exhaustive, or slow by default: catch important defects early, and keep a suite the team still runs.
+
+### Beyond unit tests
+
+Add one only when its trigger is present, never as a standing dependency.
+
+| Technique | The angry question | Trigger |
+|-----------|--------------------|---------|
+| Property-based | Which classes of input break an invariant? | a strong, generic invariant |
+| Fuzzing | Which unexpected inputs cause crashes or incoherent state? | parsing, untrusted input |
+| Mutation testing | Does the suite notice a deliberately injected fault? | a critical component whose sensitivity you doubt |
+| Performance / load | Does the system stay correct under hostile cost or load? | a real latency or volume constraint |
+| Architecture / static analysis | Can the build forbid a structure or rule violation? | a boundary worth protecting mechanically |
+
+The reasoning behind all of this, and the parts of the doctrine deliberately not adopted, live in [references/ANGRY-TESTS.md](references/ANGRY-TESTS.md).
 
 ## Quick Decision Trees
 
@@ -97,6 +218,17 @@ What do I care about?
 ├─ Error condition or boundary case        → Exception / error assertion
 ├─ Side effect recorded in fake/spy        → Verify observable effect
 └─ Internal call order or private methods  → Usually don't test that
+```
+
+### "Should this be a fast or a deep test?"
+
+```
+What is the risk I am chasing?
+├─ Business rule, branch, or contract       → Fast, with a fake at the boundary
+├─ Serialization, parsing, real I/O shape   → Deep, no fake for that boundary
+├─ Resource leak, volume, concurrency       → Deep, and let it cost what it costs
+├─ Reproducing an observed bug              → Fast if it localizes, deep if it needs reality
+└─ Both would catch it                      → Fast, and stop there
 ```
 
 ### "Why is this test fragile?"
@@ -163,18 +295,6 @@ Arrange → Act → Assert → (Optional) Teardown
 
 **Default order:** real dependency → fake → stub/spy → mock.
 
-## Example Guidance
-
-- Prefer **DSL-first tests** in new code: test case → small business DSL → in-memory driver → SUT.
-- Prefer **observable outcomes** over interaction verification.
-- Keep **one Act step** per scenario.
-- Treat **coverage as a clue**, not proof of quality.
-
-For worked examples, see:
-
-- [examples/SERVICE-EXAMPLE.md](examples/SERVICE-EXAMPLE.md)
-- [../dsl-driven-testing/SKILL.md](../dsl-driven-testing/SKILL.md)
-
 ## Anti-Patterns
 
 | Anti-Pattern | Problem | Fix |
@@ -187,6 +307,12 @@ For worked examples, see:
 | **Testing private methods** | Locks tests to implementation details | Test through public behavior |
 | **Multiple behaviors in one test** | Failures are ambiguous | Split into one scenario per test |
 | **Skipping a useful DSL in new code** | Tests speak framework details instead of business intent | Add a small scenario/DSL layer first |
+| **Happy-path-only suite** | Confirms the intuition that produced the code; the failure modes stay untested | Attack the behavior with the relevant ZOMBIES dimensions |
+| **Decorative RED** | A test that fails for the wrong reason proves nothing | Check the failure message says what you expected before making it green |
+| **Faking the boundary under test** | The deep test verifies the double, not the reality it exists for | Keep that boundary real; fake the ones you are not testing |
+| **Unexplained flaky test** | Reddens without action, and the team stops trusting the suite | Model it with repetition and an owner, or fix the suite |
+| **Fix before reproduction** | The wrong mechanism gets repaired, with no lasting guard | Write the failing test first |
+| **Test-driven defensive code** | Retries, locks, and swallowed exceptions nobody decided, made permanent by a test | Check the spec decided the outcome; otherwise raise the question |
 
 ## The Four Quality Pillars
 
@@ -201,6 +327,8 @@ Evaluate each test against these four properties:
 
 If a test scores poorly on **refactoring resistance**, redesign it before adding more assertions.
 
+**Fast feedback** applies to the loop, not to every test: a deep test buys detection with time and belongs in the build's suite, not the one you run on every save.
+
 ## Review Checklist
 
 - Does the test describe a business-relevant behavior?
@@ -212,17 +340,20 @@ If a test scores poorly on **refactoring resistance**, redesign it before adding
 - Is the setup shorter than the behavior being tested?
 - Is the test deterministic and fast locally?
 - Does it avoid using coverage as the definition of quality?
+- Does the test actually try to falsify an assumption, or only confirm one?
+- Are the ZOMBIES dimensions that carry risk covered, and the others left out?
+- If the test forces a technical mechanism, did someone actually decide that mechanism?
+- Would the red be diagnostic: clear name, informative message, one-command reproduction?
+- If it overlaps another test, does it detect through an independent path?
+- For a bugfix, did the reproduction come before the fix?
 
 ## AI-Specific Guidance
 
-Coding agents often generate too many mocks. When writing tests with AI assistance:
+Coding agents default to mocking everything. Three instructions fix most of it:
 
-1. **Explicitly ask for DSL-driven tests in new code.**
-2. **Ask for a small business DSL first, then a fast in-memory driver.**
-3. **State “prefer classic-style assertions and fakes over mocks.”**
-4. **Forbid verification of private calls or call order unless strictly necessary.**
-5. **Require AAA layout and one behavior per test.**
-6. **Ask the agent to explain why each test double is needed and why a DSL was or was not introduced.**
+1. Ask for a small business DSL first, then a fast in-memory driver.
+2. Forbid verification of private calls and call order unless strictly necessary.
+3. Require a written reason for each test double, and for skipping the DSL.
 
 ## Reference Documentation
 
@@ -230,6 +361,7 @@ Coding agents often generate too many mocks. When writing tests with AI assistan
 |------|---------|
 | [references/CHEATSHEET.md](references/CHEATSHEET.md) | Quick checklist for daily use |
 | [references/TEST-DOUBLES.md](references/TEST-DOUBLES.md) | Choosing between real deps, fakes, spies, and mocks |
+| [references/ANGRY-TESTS.md](references/ANGRY-TESTS.md) | Why the angry posture works, and which parts of the doctrine to refuse |
 | [examples/SERVICE-EXAMPLE.md](examples/SERVICE-EXAMPLE.md) | Example of a DSL-first, classic-style unit test |
 | [../dsl-driven-testing/SKILL.md](../dsl-driven-testing/SKILL.md) | Default test architecture for long-lived code |
 
@@ -242,4 +374,5 @@ Coding agents often generate too many mocks. When writing tests with AI assistan
 - Gerard Meszaros — *xUnit Test Patterns* (AAA / Four-Phase, test doubles, test smells)
 - Vladimir Khorikov — *Unit Testing: Principles, Practices, and Patterns* (four quality pillars, classic style, refactoring resistance)
 - Martin Fowler — test doubles taxonomy and mocking guidance
+- Yegor Bugayenko, *Angry Tests* (testing as defect search, hostile inputs, fast/deep, fakes over mock frameworks, regression-first). See [references/ANGRY-TESTS.md](references/ANGRY-TESTS.md)
 - Empirical findings summarized in the review: TDD/testing improves quality, excessive mocking increases fragility, and code coverage is useful as a signal but weak as a target
