@@ -319,3 +319,161 @@ flow.then_offers_count(10)  # Works with all drivers
 | Check `last_get_url` | `.then_search_performed_with(query)` |
 
 The goal: **same test case should run identically across all drivers** — the only thing that changes is the driver implementation.
+
+---
+
+## Language-Specific DSL Mechanics
+
+### LMAX-style DSL (Java — string params with defaults)
+
+```java
+// DSL method — optional params with defaults
+public void checkOut(String... args) {
+    Params params = new Params(args);
+    String item  = params.optional("item",  "Continuous Delivery");
+    String price = params.optional("price", "£10.00");
+    Card   card  = parseCard(params.optional("card", "1234 5678 9101 0001 12/23 007"));
+
+    driver.checkOut(item, price, card);  // delegate to driver
+}
+
+// Test calls only what matters
+shopping.checkOut("item: Continuous Delivery");  // price and card use defaults
+```
+
+### Typed DSL (Python — kwargs)
+
+```python
+# ✅ Type-safe, IDE-friendly, refactorable
+flow.when_searching_offres(
+    sort=Sort.DATE_CREATION,
+    type_contrat=CodeTypeContrat.CDI,
+    departement="75",
+)
+
+# ❌ LMAX style in Python — works but loses type checking
+flow.when_searching_offres("sort: DATE_CREATION", "typeContrat: CDI")
+```
+
+### Choosing a parametrization style
+
+| Language / need | Style |
+|---|---|
+| Java / extreme readability | `"name: value"` strings (LMAX) |
+| Python / TypeScript, type safety matters | Typed kwargs / typed params |
+| Gherkin / Cucumber | Step definitions delegate to a DSL object |
+| Defaults needed everywhere | Optional params with sensible defaults |
+
+### TestContext — shared whiteboard between DSL components
+
+```java
+public class DslTestCase {
+    private final SystemDriver systemDriver = new SystemDriver();
+    private final TestContext  testContext  = new TestContext();
+
+    // DSL fields exposed to tests
+    protected final AdminAPI  adminAPI  = new AdminAPI(systemDriver, testContext);
+    protected final PublicAPI publicAPI = new PublicAPI(systemDriver, testContext);
+    protected final TradingUI tradingUI = new TradingUI(systemDriver, testContext);
+}
+// TestContext maps aliases → real IDs: "Bob" → "Bob-83749234"
+```
+
+---
+
+## Protocol Driver Mechanics
+
+### Same test — two drivers (Java)
+
+```java
+// WebDriver implementation
+@Override
+public void assertListedInShoppingBasket(String item) {
+    gotoPage("https://www.amazon.co.uk/gp/cart/view.html");
+    List<WebElement> found = driver().findElements(
+        By.xpath("//span[contains(., \"" + item + "\")]")
+    );
+    assertEquals(1, found.size());
+}
+
+// In-memory implementation — same interface, zero network
+@Override
+public void assertListedInShoppingBasket(String item) {
+    assertTrue(basket.contains(item));
+}
+```
+
+The test case does not change. Only the driver changes.
+
+### Driver selection (JavaScript — env vars)
+
+```javascript
+// World.js
+function getActor() {
+    switch (process.env.ACTOR) {
+        case 'DirectActor':    return new DirectActor(makeCodebreaker());
+        case 'DomActor':       return new DomActor(makeCodebreaker());
+        case 'WebDriverActor': return new WebDriverActor(makeCodebreaker());
+    }
+}
+```
+
+```bash
+# Same scenario, 3 execution profiles
+ACTOR=DirectActor    API=Codebreaker     cucumber-js  # in-memory, < 10ms
+ACTOR=DirectActor    API=HttpCodebreaker cucumber-js  # HTTP, < 500ms
+ACTOR=WebDriverActor API=HttpCodebreaker cucumber-js  # real browser, seconds
+```
+
+### Driver selection (Python — Scenario builder)
+
+```python
+@dataclass
+class Scenario:
+    def unit(self) -> "Scenario":
+        self._http_client = FakeHttpClient()   # no network
+        return self
+
+    def integration(self) -> "Scenario":
+        self._http_client = HttpClient()       # real HTTP
+        return self
+
+    def e2e(self) -> "Scenario":
+        self._client = RealClient(os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"])
+        return self
+
+    def auto(self) -> "Scenario":
+        """Pick highest available driver from environment."""
+        if os.environ.get("CLIENT_ID"):
+            return self.e2e()
+        if os.environ.get("INTEGRATION"):
+            return self.integration()
+        return self.unit()
+```
+
+Full walkthrough: [examples/PYTHON-SCENARIO.md](../examples/PYTHON-SCENARIO.md).
+
+### How to select the driver at runtime
+
+| Situation | Approach |
+|---|---|
+| Only one driver exists today | No runtime selection yet |
+| CI matrix or explicit command | Environment variables (codebreaker-js style) |
+| pytest | `conftest.py` with a `--driver` option |
+| Auto-detect from env (creds available?) | `.auto()` method on `Scenario` |
+| Same test on all drivers | `@pytest.mark.parametrize` / JUnit params |
+
+### Lazy driver initialization
+
+```java
+public class SystemDriver {
+    private UIDriver uiDriver;  // null until first access
+
+    public UIDriver getUIDriver() {
+        if (uiDriver == null) {
+            uiDriver = new UIDriver();  // Selenium starts HERE, only if needed
+        }
+        return uiDriver;
+    }
+}
+```

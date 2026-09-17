@@ -6,36 +6,43 @@ description: Proactively apply when writing acceptance tests, designing test arc
 # DSL-Driven Testing — Default Way to Write Tests
 
 > Known as: **SimpleDSL**, **Four Layer Testing**, **ATDD with Protocol Drivers**, **Subsecond TDD**
->
-> Write tests in a **pure business DSL**, then plug in different **drivers** (in-memory, HTTP, UI...) when needed. This should be the **default testing style by a wide margin** for new code and greenfield work, because it produces clearer executable specs, better design pressure, and lower long-term maintenance cost than implementation-coupled tests.
->
-> Start even with a single driver. Multiple drivers are a payoff, not a prerequisite. The main exception is **brownfield code** where introducing the DSL everywhere would create too much churn for too little value, or would require a team migration the context does not justify.
 
----
+Write tests in a **pure business DSL**, then plug in different **drivers** (in-memory, HTTP, UI...) when needed.
+
+## Why a DSL at All
+
+In production code, you do not scatter `if user.role_id == 3` across the codebase. You write `user.is_admin()`. You build abstractions that **name the business problem**, so the next reader grasps the intent instead of decoding the mechanism.
+
+Test code is code. It deserves the same treatment.
+
+| | Mechanism | Business problem |
+|---|---|---|
+| Production | `if user.role_id == 3` | `if user.is_admin()` |
+| Test | `page.fill("#qty", "10")` | `trading.place_order(quantity=10)` |
+
+The DSL is nothing more than that familiar abstraction layer, applied to tests. The whole four-layer architecture follows from this one idea:
+
+- **Layer 1** (test cases) — the business problem, stated
+- **Layer 2** (DSL) — the abstraction that names it
+- **Layer 3** (drivers) — the mechanism, hidden
+
+If you already model your domain in production code, you already accept this skill. Building abstractions in production while writing tests against raw selectors and URLs means holding your tests to a lower standard than your code. Tests are read more often than they are written, and they break more often than production code.
 
 ## Default Stance
 
-Use this as the **default way to write tests** unless there is a concrete reason not to.
+Use this as the default way to write tests unless there is a concrete reason not to. It produces clearer executable specs, better design pressure, and lower maintenance cost than implementation-coupled tests.
 
-- Prefer this style for new features, bug fixes, and any test suite expected to live longer than a short spike
-- Prefer this style even when only one execution level exists today
-- Treat multiple drivers as an option, not a prerequisite
-- Fall back to more direct tests mainly in brownfield areas where migration cost, churn, or team adoption cost is clearly too high relative to the benefit
-
-If you're hesitating, start with a small business DSL rather than writing tests directly against UI, HTTP, or framework details.
-
----
-
-## When to Use / Skip
+- Use it for new features, bug fixes, and any suite expected to outlive a short spike
+- Use it even when only one execution level exists today — **one driver is enough to start**. Multiple drivers are a payoff, not a prerequisite
+- Fall back to direct tests mainly in **brownfield** areas where migration cost or churn clearly outweighs the benefit
 
 | Use When | Skip / Relax When |
 |----------|---------------------|
-| Almost always for new product code | Brownfield area where retrofitting the DSL broadly would be too expensive or disruptive right now |
+| Almost always for new product code | Brownfield area where retrofitting broadly is too expensive right now |
 | Test suite needs multiple execution levels | Throwaway spike or short-lived prototype |
-| Tests are coupled to UI/HTTP/DB | Truly trivial code where a DSL adds ceremony without improving clarity |
-| Want same scenario to run fast AND realistically | Team constraints make a full migration unrealistic for now |
-| Building long-lived system with evolving infra | Existing tests are already clear enough and changing them would mostly create churn |
-| Want tests to read like executable specs, even in unit tests | Simple CRUD with no meaningful business language to preserve |
+| Tests are coupled to UI/HTTP/DB | Truly trivial code where a DSL adds ceremony without clarity |
+| Want the same scenario to run fast AND realistically | Team constraints make migration unrealistic for now |
+| Want tests to read like executable specs | Simple CRUD with no business language to preserve |
 
 ---
 
@@ -66,300 +73,26 @@ If you're hesitating, start with a small business DSL rather than writing tests 
 └──────────────────────────────────────────────────┘
 ```
 
-**Substitution principle**: same test case + same DSL can connect to any driver. The DSL is the stable interface; drivers are swappable.
+**Substitution principle**: the same test case and the same DSL can connect to any driver. The DSL is the stable interface; drivers are swappable.
 
-**One driver is enough to start**: the main benefit is already there with a single driver: a stable business language for tests, clearer scenarios, less brittle setup, and easier long-term maintenance. Additional drivers can come later if they become useful.
-
-**Brownfield exception**: don't force a large rewrite just to reach purity. Introduce the DSL where new work is happening, where pain is highest, or where it creates leverage.
-
----
-
-## Quick Decision Trees
-
-### "Which layer does this code belong to?"
+### Which layer does this code belong to?
 
 ```
-Where does this code go?
 ├─ Describes WHAT the system does (business terms)   → Test Case (Layer 1)
 ├─ Translates domain vocab to driver calls           → DSL (Layer 2)
 ├─ Knows about HTTP, Selenium, DB, etc.              → Protocol Driver (Layer 3)
 └─ Is the actual application                         → SUT (Layer 4)
 ```
 
-### "Which driver should I use?"
+### Which driver should I use?
 
 ```
-Test goal?
-├─ Only one useful driver today                          → Use it directly; runtime selection can wait
-├─ Express business rules clearly in unit tests        → Domain/in-memory driver is enough
-├─ Validate business logic — fast                    → In-memory / Domain driver
-├─ Validate HTTP contract / API                      → HTTP driver
-├─ Validate UI rendering / user flows                → WebDriver / Playwright
-└─ Production smoke test                             → Full E2E driver
+├─ Only one useful driver today          → Use it directly; runtime selection can wait
+├─ Validate business logic — fast        → In-memory / Domain driver
+├─ Validate HTTP contract / API          → HTTP driver
+├─ Validate UI rendering / user flows    → WebDriver / Playwright
+└─ Production smoke test                 → Full E2E driver
 ```
-
-### "How should I parametrize my DSL?"
-
-```
-Language / ecosystem?
-├─ Java / need extreme readability                   → "name: value" strings (LMAX style)
-├─ Python / TypeScript — type safety matters         → Typed kwargs / typed params
-├─ Gherkin / Cucumber                                → Step definitions delegate to DSL object
-└─ Need default values everywhere                    → Optional params with sensible defaults
-```
-
-### "How do I select the driver at runtime?"
-
-```
-Approach?
-├─ Only one driver exists for now                     → No runtime selection yet
-├─ CI matrix or explicit command                     → Environment variables (codebreaker-js style)
-├─ pytest fixture                                    → conftest.py --driver option
-├─ Auto-detect from env (creds available?)           → .auto() method on Scenario
-└─ Parametrize (same test, all drivers)              → @pytest.mark.parametrize / JUnit params
-```
-
----
-
-## Layer 1: Test Cases
-
-Test cases are **executable specifications** — they describe *what* the system does, never *how*.
-
-### Rules
-- Written from the perspective of an external user
-- No variables, no control flow (no if/for/while)
-- No technical terms (HTTP, SQL, DOM, CSS selectors…)
-- Interact with the SUT through **public interfaces only** (no backdoors)
-- Express only what's relevant for that specific scenario
-
-```java
-// ✅ Business language — no tech references
-@Test
-public void shouldReceiveCancellationMessageAfterCancellingAnOrder() {
-    publicAPI.placeOrder("FTSE100", "side: buy", "quantity: 10", "price: 5000", "order: order1");
-    publicAPI.cancelOrder("FTSE100", "order1");
-    publicAPI.waitForOrderState("order: order1", "cancelledQuantity: 10");
-}
-
-// ❌ Coupled to implementation — cannot run in-memory
-@Test
-public void shouldReceiveCancellationMessage() {
-    driver.findElement(By.id("quantity")).sendKeys("10");
-    driver.findElement(By.id("submit-order")).click();
-    // ...
-}
-```
-
----
-
-## Layer 2: DSL
-
-The DSL is the **lingua franca** between tests and infrastructure.
-
-### DSL Design Rules (Dave Farley)
-1. **Business vocabulary only** — never `clickButton()`, always `placeOrder()`
-2. **Optional params everywhere** — tests express only what's relevant for the case
-3. **Sensible defaults** — default credit card, default user, default item
-4. **Encode common setup** — `createUser`, `populateBaseData` are DSL responsibilities
-5. **No Java/Python variables in tests** — use aliases stored in `TestContext`
-6. **No computed expressions** — values are declared, not calculated
-
-### DSL Must Be Reusable & Business-Focused
-
-> **Critical**: A true business DSL accepts **inputs and outputs directly in business terms** — it must be reusable across different scenarios without exposing implementation details.
-
-| Principle | Implementation-Coupled DSL | True Business DSL |
-|-----------|----------------------------|-------------------|
-| **Inputs** | `.with_http_response(status=200, body={...})` | `.given_offers(offers=[...])` |
-| **Outputs** | `.then_last_get_url_contains("...")` | `.then_offers_found(count=N)` |
-| **Assertions** | Check HTTP status, headers, URL params | Check business outcomes, domain entities |
-| **Coupling** | Tied to driver internals | Driver is an implementation detail |
-
-```java
-// ❌ Implementation-coupled — can't reuse for other scenarios
-publicAPI.placeOrder("FTSE100", "side: buy", "quantity: 10");
-assertEquals("https://api.example.com/orders?symbol=FTSE100", lastUrl);
-
-// ✅ Business DSL — reusable, no implementation details exposed
-trading.placeOrder(symbol="FTSE100", side=Side.BUY, quantity=10);
-trading.then_orderIsConfirmed();  // Business outcome only
-trading.then_orderTotalValueIs(10, atPrice=5000);  // Domain logic
-```
-
-The DSL should hide **all** driver details. If your test assertions reference URLs, HTTP status codes, or driver internals, your DSL is not business-focused enough.
-
-### LMAX-style DSL (Java — string params)
-
-```java
-// DSL method — optional params with defaults
-public void checkOut(String... args) {
-    Params params = new Params(args);
-    String item  = params.optional("item",  "Continuous Delivery");
-    String price = params.optional("price", "£10.00");
-    Card   card  = parseCard(params.optional("card", "1234 5678 9101 0001 12/23 007"));
-
-    driver.checkOut(item, price, card);  // delegate to driver
-}
-
-// Test calls only what matters
-shopping.checkOut("item: Continuous Delivery");  // price and card use defaults
-```
-
-### Typed DSL (Python — kwargs)
-
-```python
-# ✅ Type-safe, IDE-friendly, refactorable
-flow.when_searching_offres(
-    sort=Sort.DATE_CREATION,
-    type_contrat=CodeTypeContrat.CDI,
-    departement="75",
-)
-
-# ❌ LMAX style in Python — works but loses type checking
-flow.when_searching_offres("sort: DATE_CREATION", "typeContrat: CDI")
-```
-
-### TestContext — shared whiteboard between DSL components
-
-```java
-public class DslTestCase {
-    private final SystemDriver systemDriver = new SystemDriver();
-    private final TestContext  testContext  = new TestContext();
-
-    // DSL fields exposed to tests
-    protected final AdminAPI        adminAPI        = new AdminAPI(systemDriver, testContext);
-    protected final PublicAPI       publicAPI       = new PublicAPI(systemDriver, testContext);
-    protected final TradingUI       tradingUI       = new TradingUI(systemDriver, testContext);
-}
-// TestContext maps aliases → real IDs: "Bob" → "Bob-83749234"
-```
-
----
-
-## Layer 3: Protocol Drivers
-
-Protocol Drivers are **adapters** in hexagonal architecture terms. Each driver:
-- Implements the interface the DSL expects
-- Encodes real interactions with the SUT (clicks, HTTP calls, in-memory calls…)
-- Isolates **all** infrastructure knowledge
-
-### Same test — two drivers
-
-```java
-// WebDriver implementation
-@Override
-public void assertListedInShoppingBasket(String item) {
-    gotoPage("https://www.amazon.co.uk/gp/cart/view.html");
-    List<WebElement> found = driver().findElements(
-        By.xpath("//span[contains(., \"" + item + "\")]")
-    );
-    assertEquals(1, found.size());
-}
-
-// In-memory implementation — same interface, zero network
-@Override
-public void assertListedInShoppingBasket(String item) {
-    assertTrue(basket.contains(item));
-}
-```
-
-The test case doesn't change. Only the driver changes.
-
-### Driver selection (JavaScript — env vars)
-
-```javascript
-// World.js
-function getActor() {
-    switch (process.env.ACTOR) {
-        case 'DirectActor':    return new DirectActor(makeCodebreaker());
-        case 'DomActor':       return new DomActor(makeCodebreaker());
-        case 'WebDriverActor': return new WebDriverActor(makeCodebreaker());
-    }
-}
-```
-
-```bash
-# Same scenario, 3 execution profiles
-ACTOR=DirectActor    API=Codebreaker     cucumber-js  # in-memory, < 10ms
-ACTOR=DirectActor    API=HttpCodebreaker cucumber-js  # HTTP, < 500ms
-ACTOR=WebDriverActor API=HttpCodebreaker cucumber-js  # real browser, seconds
-```
-
-### Driver selection (Python — Scenario builder)
-
-```python
-@dataclass
-class Scenario:
-    def unit(self) -> "Scenario":
-        self._http_client = FakeHttpClient()   # no network
-        return self
-
-    def integration(self) -> "Scenario":
-        self._http_client = HttpClient()       # real HTTP
-        return self
-
-    def e2e(self) -> "Scenario":
-        self._client = RealClient(os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"])
-        return self
-
-    def auto(self) -> "Scenario":
-        """Pick highest available driver from environment."""
-        if os.environ.get("CLIENT_ID"):
-            return self.e2e()
-        if os.environ.get("INTEGRATION"):
-            return self.integration()
-        return self.unit()
-```
-
-### Lazy driver initialization
-
-```java
-public class SystemDriver {
-    private UIDriver uiDriver;  // null until first access
-
-    public UIDriver getUIDriver() {
-        if (uiDriver == null) {
-            uiDriver = new UIDriver();  // Selenium starts HERE, only if needed
-        }
-        return uiDriver;
-    }
-}
-```
-
----
-
-## Key Patterns
-
-| Pattern | Problem Solved | Example |
-|---------|---------------|---------|
-| **Alias** | Avoid technical IDs in tests | `"Bob"` → `"Bob-83749234"` in TestContext |
-| **Keywords** | Express presence/absence without values | `"status: PRESENT"`, `"fee: ABSENT"` |
-| **RememberAs** | Store results without Java variables | `"rememberAs: myOrder"` → `cancelOrder("order: myOrder")` |
-| **Parameter Combining** | Group related params | `"bid: 10@49.0"` instead of 2 separate params |
-| **Time Machine** | Test time-based logic without sleep | `dsl.waitUntil("marketOpen")` with simulated time |
-| **Fake over Mock** | Realistic test doubles | Handcrafted class implementing the same interface, not `MagicMock` |
-
----
-
-## Anti-Patterns
-
-| Anti-Pattern | Problem | Fix |
-|--------------|---------|-----|
-| Tech terms in test cases | `fill('#qty', '10')` — can't run in-memory | `trading.placeOrder("quantity: 10")` |
-| Page Objects only | Browser-coupled, no in-memory path | Add a DSL layer above Page Objects |
-| Backdoor DB setup | `INSERT INTO users…` — bypasses the system | Use DSL: `registrationAPI.createUser("Bob")` |
-| Shared test data | Tests depend on global state | Each test creates what it needs in `@Before` |
-| Logic in step definitions | `await page.fill('#q', '10')` in When | Delegate to DSL object |
-| Single slow driver only | UI/E2E-only suite — slow and fragile | Keep the DSL, add an in-memory driver first |
-| Mock frameworks over fakes | `MagicMock` hides behavior | Write a real `FakeHttpClient` class with state |
-| **DSL exposes driver internals** | Test checks `last_get_url`, HTTP status codes — can't swap driver | Refactor to business assertions like `then_offers_found()` |
-| **DSL input is driver-specific** | `.with_http_response(status=200, body={...})` leaks HTTP details | Use domain inputs like `.given_offers(offers=[...])` |
-| **Test asserts on URLs/headers** | `assertContains(lastUrl, "api/orders")` couples to implementation | Assert on business outcomes: `then_orderConfirmed()` |
-| **DSL not reusable** | New scenario requires new DSL methods or direct driver access | DSL should cover all common business scenarios |
-
----
-
-## Driver Speed Reference
 
 | Configuration | Driver | External deps | Speed |
 |---|---|---|---|
@@ -370,38 +103,121 @@ public class SystemDriver {
 
 ---
 
+## Layer 1: Test Cases
+
+Test cases are **executable specifications** — they describe *what* the system does, never *how*.
+
+- Written from the perspective of an external user
+- No variables, no control flow (no `if`/`for`/`while`)
+- No technical terms (HTTP, SQL, DOM, CSS selectors…)
+- Interact with the SUT through **public interfaces only** — no backdoors
+- Express only what is relevant for that scenario
+
+```python
+# ✅ Business language — runs on any driver
+def test_cancelling_an_order_releases_the_quantity():
+    trading.place_order(symbol="FTSE100", side=Side.BUY, quantity=10, price=5000, alias="order1")
+    trading.cancel_order(alias="order1")
+    trading.then_order_is_cancelled(alias="order1", cancelled_quantity=10)
+
+# ❌ Coupled to the browser — cannot run in-memory
+def test_cancelling_an_order():
+    page.fill("#quantity", "10")
+    page.click("#submit-order")
+```
+
+---
+
+## Layer 2: DSL
+
+The DSL is the **lingua franca** between tests and infrastructure.
+
+### Design rules (Dave Farley)
+
+1. **Business vocabulary only** — never `click_button()`, always `place_order()`
+2. **Optional params everywhere** — tests express only what the case needs
+3. **Sensible defaults** — default credit card, default user, default item
+4. **Encode common setup** — `create_user`, `populate_base_data` belong to the DSL
+5. **No host-language variables in tests** — use aliases stored in a `TestContext`
+6. **No computed expressions** — values are declared, not calculated
+
+### Inputs and outputs must be business terms
+
+> **Critical**: a true business DSL takes **inputs and outputs directly in business terms**. If your assertions reference URLs, HTTP status codes, or driver internals, the DSL is not business-focused enough.
+
+| | Implementation-coupled DSL | True business DSL |
+|-----------|----------------------------|-------------------|
+| **Inputs** | `.with_http_response(status=200, body={...})` | `.given_offers(offers=[...])` |
+| **Outputs** | `.then_last_get_url_contains("...")` | `.then_offers_found(count=N)` |
+| **Assertions** | HTTP status, headers, URL params | Business outcomes, domain entities |
+| **Coupling** | Tied to driver internals | Driver is an implementation detail |
+
+This rule holds in brownfield too. Existing tests may check URLs; the **new** DSL methods you write must not.
+
+Parametrization styles per language, and the `TestContext` pattern: see [references/PATTERNS.md](references/PATTERNS.md).
+
+---
+
+## Layer 3: Protocol Drivers
+
+Protocol Drivers are **adapters** in hexagonal architecture terms. Each driver:
+
+- Implements the interface the DSL expects
+- Encodes real interactions with the SUT (clicks, HTTP calls, in-memory calls…)
+- Isolates **all** infrastructure knowledge
+
+Driver implementations, runtime driver selection, and lazy initialization: see [references/PATTERNS.md](references/PATTERNS.md).
+
+---
+
+## Key Patterns
+
+| Pattern | Problem Solved | Example |
+|---------|---------------|---------|
+| **Alias** | Avoid technical IDs in tests | `"Bob"` → `"Bob-83749234"` in TestContext |
+| **Keywords** | Express presence/absence without values | `"status: PRESENT"`, `"fee: ABSENT"` |
+| **RememberAs** | Store results without host-language variables | `"rememberAs: myOrder"` → `cancel_order("order: myOrder")` |
+| **Parameter Combining** | Group related params | `"bid: 10@49.0"` instead of 2 params |
+| **Time Machine** | Test time-based logic without sleep | `dsl.wait_until("marketOpen")` with simulated time |
+| **Fake over Mock** | Realistic test doubles | Hand-written class implementing the interface, not `MagicMock` |
+
+Full code for each: [references/PATTERNS.md](references/PATTERNS.md).
+
+---
+
+## Anti-Patterns
+
+| Anti-Pattern | Problem | Fix |
+|--------------|---------|-----|
+| Tech terms in test cases | `fill('#qty', '10')` — cannot run in-memory | `trading.place_order(quantity=10)` |
+| Page Objects only | Browser-coupled, no in-memory path | Add a DSL layer above Page Objects |
+| Backdoor DB setup | `INSERT INTO users…` bypasses the system | Use the DSL: `registration.create_user("Bob")` |
+| Shared test data | Tests depend on global state | Each test creates what it needs |
+| Logic in step definitions | `await page.fill('#q', '10')` in a `When` | Delegate to the DSL object |
+| Single slow driver only | UI/E2E-only suite — slow and fragile | Keep the DSL, add an in-memory driver first |
+| Mock frameworks over fakes | `MagicMock` hides behavior | Write a real `FakeHttpClient` with state |
+| DSL exposes driver internals | Test checks `last_get_url` or status codes | Assert business outcomes: `then_offers_found()` |
+| DSL input is driver-specific | `.with_http_response(...)` leaks HTTP | Use domain inputs: `.given_offers([...])` |
+| DSL not reusable | Each new scenario needs new DSL methods | Cover the common business scenarios |
+
+---
+
 ## Growing a DSL — Step by Step
 
 1. Write 2-3 tests covering the most important behaviors
-2. Invent the language you need — don't worry about implementation yet
+2. Invent the language you need — ignore implementation for now
 3. Implement the minimal DSL to pass these tests
-4. Start with a **single driver** that gives the fastest useful feedback (often in-memory)
-5. Add other drivers later only if they buy you confidence at another level
-6. Grow the DSL organically as new acceptance criteria arrive
+4. Start with a **single driver** giving the fastest useful feedback (often in-memory)
+5. Add other drivers later, only if they buy confidence at another level
+6. Grow the DSL as new acceptance criteria arrive
 
 ### Brownfield adoption rule
 
-In brownfield code, prefer **incremental adoption** over heroic rewrites.
+Prefer **incremental adoption** over heroic rewrites.
 
-- Add the DSL first around new behavior, flaky areas, or tests that are painful to read/change
-- Do not rewrite a whole legacy suite only for aesthetic consistency
-- Do not impose a migration cost on the team unless the payoff is clear and near-term
-- But when you create new tests in a long-lived area, bias strongly toward the DSL instead of copying the old style
-
-### Brownfield: Business DSL vs Implementation-Coupled Tests
-
-> When adding new tests to brownfield code, the DSL must be **business-focused from the start** — even if implementation details leak elsewhere.
-
-**Key principle for brownfield**: The new DSL code you write must not expose driver internals. Even if existing tests check URLs or HTTP status codes, **your new DSL methods should hide all that**.
-
-| Scenario | Old style (avoid) | New DSL style (required) |
-|----------|------------------|-------------------------|
-| Setup data | `.with_http_response(status=200, body={...})` | `.given_orders([...])` |
-| Assert exception | `assert http.status == 401` | `.then_authenticationFails()` |
-| Assert result | `.then_last_url_contains("api/orders")` | `.then_orderIsConfirmed()` |
-| Stub external | `httpClient.stub(200, {...})` | `.given_offers(faked_offers)` |
-
-Even in brownfield, you have the opportunity to model the right behavior. The key is: **tests written against the new DSL should never need to know about HTTP, URLs, or driver internals**.
+- Add the DSL around new behavior, flaky areas, or tests painful to read
+- Do not rewrite a legacy suite for aesthetic consistency alone
+- But for new tests in a long-lived area, bias strongly toward the DSL
 
 ### Ownership model
 
@@ -419,7 +235,7 @@ DSL + PDs    → Developers (own the plumbing)
 
 | File | Purpose |
 |------|---------|
-| [references/PATTERNS.md](references/PATTERNS.md) | Advanced patterns (LMAX, codebreaker-js, Screenplay) |
+| [references/PATTERNS.md](references/PATTERNS.md) | Advanced patterns, per-language DSL mechanics, driver selection |
 | [references/SCREENPLAY.md](references/SCREENPLAY.md) | Screenplay Pattern — OO approach to protocol drivers |
 | [examples/PYTHON-SCENARIO.md](examples/PYTHON-SCENARIO.md) | Full Python example (france-travail-api style) |
 
