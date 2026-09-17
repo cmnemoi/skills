@@ -1,0 +1,34 @@
+skills/blog-technique-charles/SKILL.md
+  s_d981a5cd39ef1d::t_a075221800ed7e 4,35-36,38,40,49,51,55-56,64,77-78,108,188,202-204,217,224-225
+skills/blog-technique-charles/references/exemple-mocks.md
+  s_d981a5cd39ef1d::t_4d2a4ce473a521 40-46
+skills/style-technique-charles/SKILL.md
+  s_d981a5cd39ef1d::t_4499edbbac993e 4,9,45,48,58,62,104-106,115-120,184-186,190-196,206-213,230,234,242,248,258,264-265,268-269,271,298-299,304-305,314,319
+skills/style-technique-charles/references/extraits.md
+  s_d981a5cd39ef1d::t_cc8ee7290be085 3,150
+skills/style-technique-charles/references/paires-contrastives.md
+  s_d981a5cd39ef1d::t_d8756249d1a33e 196
+skills/style-technique-charles/references/registre-article.md
+  s_d981a5cd39ef1d::t_41019161406aad 1,3-5,9-19,26-27,51,55,57,60-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "5930fb86fb2625d3c212c5fc43ec540ccd1b0fae",
+  "prompts": {},
+  "humans": {
+    "h_32f94e59e2f995": {
+      "author": "Charles-Meldhine Madi Mnemoi <icdk5b4zf@relay.firefox.com>"
+    }
+  },
+  "sessions": {
+    "s_d981a5cd39ef1d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a722348e-98bd-49c2-a49e-bfc4a8f80a36",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Charles-Meldhine Madi Mnemoi <icdk5b4zf@relay.firefox.com>"
+    }
+  }
+}
