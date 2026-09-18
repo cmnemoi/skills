@@ -140,6 +140,7 @@ The DSL is the **lingua franca** between tests and infrastructure.
 4. **Encode common setup** — `create_user`, `populate_base_data` belong to the DSL
 5. **No host-language variables in tests** — use aliases stored in a `TestContext`
 6. **No computed expressions** — values are declared, not calculated
+7. **Hide mechanics, not data** — see below
 
 ### Inputs and outputs must be business terms
 
@@ -153,6 +154,12 @@ The DSL is the **lingua franca** between tests and infrastructure.
 | **Coupling** | Tied to driver internals | Driver is an implementation detail |
 
 This rule holds in brownfield too. Existing tests may check URLs; the **new** DSL methods you write must not.
+
+### Hide Mechanics, Not Data
+
+> **Hide test mechanics. Keep scenario data explicit.**
+
+Don't hide relevant inputs behind parameterless methods (`given_customer_in_paris()`) or expected outputs behind generic assertions (`then_results_are_correct()`) — you lose the ability to tell what's sent, what's expected, or whether two tests actually differ. Keep business data (place, product, price, status, a returned list) as explicit params and assertions. Only hide values truly incidental to the behavior under test, e.g. a JWT inside `given_authenticated_customer()`. Full example: [Anti-Pattern 5 in references/PATTERNS.md](references/PATTERNS.md#5-over-hiding-scenario-data).
 
 Parametrization styles per language, and the `TestContext` pattern: see [references/PATTERNS.md](references/PATTERNS.md).
 
@@ -199,6 +206,8 @@ Full code for each: [references/PATTERNS.md](references/PATTERNS.md).
 | DSL exposes driver internals | Test checks `last_get_url` or status codes | Assert business outcomes: `then_offers_found()` |
 | DSL input is driver-specific | `.with_http_response(...)` leaks HTTP | Use domain inputs: `.given_offers([...])` |
 | DSL not reusable | Each new scenario needs new DSL methods | Cover the common business scenarios |
+| Relevant input hidden behind a parameterless method | `given_customer_in_paris()` — no visible place/data | `given_ice_trucks_near(place=..., ice_trucks=[...])` |
+| Expected output hidden behind a generic assertion | `then_results_are_correct()` — can't tell what's expected | `then_ice_trucks_are_presented([...])` |
 
 ---
 

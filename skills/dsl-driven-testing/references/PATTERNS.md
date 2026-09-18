@@ -309,6 +309,34 @@ else:
 flow.then_offers_count(10)  # Works with all drivers
 ```
 
+### 5. Over-Hiding Scenario Data
+
+A DSL abstracts away **how** the SUT is reached (transport, fakes, serialization, wiring). It must not abstract away **which data** makes the scenario meaningful. Over-hiding turns a test into a shape with no content — readable, but no longer able to tell scenarios apart or say what actually failed.
+
+```python
+# ❌ Cheats — hides scenario data, not just mechanics.
+# Cannot tell what was sent, what existed beforehand, what output is expected,
+# or whether two such tests differ at all.
+self.scenario.given_customer_in_paris()
+await self.scenario.when_customer_searches()
+self.scenario.then_results_are_correct()
+
+# ✅ Hides transport/fake/serialization/wiring, keeps business data explicit
+self.scenario.given_ice_trucks_near(
+    place="San Francisco",
+    ice_trucks=["Bay Area - San Francisco", "San Francisco"],
+)
+await self.scenario.when_customer_searches_near("San Francisco")
+self.scenario.then_ice_trucks_are_presented(
+    ["Bay Area - San Francisco", "San Francisco"]
+)
+```
+
+- **Do not hide relevant inputs behind parameterless DSL methods.** If the value drives the behavior under test — place, product, price, status, quantity, a returned list, a business rule — it is a parameter, not a default baked into a method name.
+- **Do not hide expected outputs behind generic assertions** such as `then_result_is_correct()` or `then_results_are_correct()`. Assert the actual business outcome: `then_ice_trucks_are_presented([...])`, `then_order_status_is("CANCELLED")`.
+
+The exception: hide a value when it is genuinely **incidental to the behavior under test**. `given_authenticated_customer()` may hide a JWT, a UUID, an expiry date — none of that is what the test is about. If in doubt, keep the data visible: an over-explicit test is easier to trim than an over-hidden one is to debug.
+
 ### Refactoring to Business DSL
 
 | From (Implementation) | To (Business) |
