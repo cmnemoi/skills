@@ -1,0 +1,72 @@
+{
+  "skill_name": "micro-design",
+  "evals": [
+    {
+      "id": 1,
+      "name": "comments-and-guards",
+      "prompt": "Refacto la méthode onTitleRemoved de files/PlayerEventSubscriber.php.",
+      "expected_output": "onTitleRemoved has no 'what' comments left; the non-trivial conditions are extracted into domain-named private predicates; the first guard (doesNotHaveTag) is kept as is; the rest of the file is untouched and the remaining violations are listed as proposals.",
+      "files": ["files/PlayerEventSubscriber.php"],
+      "expectations": [
+        "All '// Don't attribute...' comments in onTitleRemoved are removed",
+        "The ship/living-players condition and the did-not-die condition are each extracted into a private predicate with a domain name",
+        "The doesNotHaveTag(TitleEnum::COMMANDER) guard is not wrapped in a new method",
+        "Other methods of the file are not rewritten",
+        "The answer lists other violations in the file (e.g. comments in incrementMushKilledStats, magic number 7 in onPlayerEnd) and offers to fix them"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "input-guard-naming",
+      "prompt": "Ajoute un log quand la statistique est créée pour la première fois dans files/UpdateUserStatisticCommandHandler.php.",
+      "expected_output": "The log is added; since the agent touches __invoke, the input guard is extracted into a domain-named predicate such as doesNotUpdate (not isNoOp); no unrelated changes elsewhere.",
+      "files": ["files/UpdateUserStatisticCommandHandler.php"],
+      "expectations": [
+        "The requested log is added",
+        "The guard `statisticName === StatisticEnum::NULL || count <= 0` is extracted into a private predicate",
+        "The predicate name is domain-oriented (e.g. doesNotUpdate), not technical (e.g. isNoOp, isInvalid)",
+        "No setters are introduced on Statistic"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "value-object-values-only",
+      "prompt": "Refacto files/GameDate.php, je le trouve bancal.",
+      "expected_output": "The agent identifies that the VO holds a Daedalus entity and reaches through it; it proposes (does not silently impose on callers) a values-only design, e.g. a GameCalendar VO passed to GameDate, and ideally an elapsed-cycles internal representation. Since GameCalendar is a new shared abstraction and Daedalus::getGameDate() plus callers must change, it asks for approval or clearly frames it as a proposal; it also asks about or proposes characterization tests if none are visible.",
+      "files": ["files/GameDate.php"],
+      "expectations": [
+        "Points out that GameDate holds a reference to the Daedalus entity",
+        "Proposes a design where GameDate holds values only (no entity reference)",
+        "Presents the introduction of a shared type such as GameCalendar as a proposal requiring approval",
+        "Mentions tests (existing or characterization) before changing behaviour",
+        "Does not invent isNotX() predicates"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "macro-is-proposed-not-done",
+      "prompt": "Ajoute le support d'une nouvelle stratégie MIN dans files/UpdatePlayerStatisticService.php.",
+      "expected_output": "The MIN strategy is added in the micro scope (match arms, predicate if needed). The fact that the service receives a Player but only consumes fragments of it (user id, language, daedalus info) is reported as a macro proposal (pass playerId/userId and use repositories), not implemented.",
+      "files": ["files/UpdatePlayerStatisticService.php"],
+      "expectations": [
+        "MIN strategy is supported",
+        "The execute(Player ...) signature is not changed",
+        "A macro-level proposal about passing an ID instead of Player is mentioned and left for approval",
+        "The match default still throws a LogicException"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "no-over-refactoring",
+      "prompt": "Passe le paramètre successRate en optionnel nullable dans files/KillLinkWithSolService.php, null voulant dire 100.",
+      "expected_output": "Only the requested change is made; the already-clean structure (recipe-like execute, named predicate shouldAbortKillingLink, named arguments) is left alone. At most, isNotEstablished() is mentioned as a minor remaining point.",
+      "files": ["files/KillLinkWithSolService.php"],
+      "expectations": [
+        "The successRate change is implemented",
+        "execute keeps its structure; no new classes or value objects are created without proposal",
+        "shouldAbortKillingLink is kept (possibly adapted)",
+        "The diff stays small (no rewrite of unrelated lines)"
+      ]
+    }
+  ]
+}

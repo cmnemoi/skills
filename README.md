@@ -74,6 +74,14 @@ Guide for writing and reviewing unit tests. Use when adding tests, fixing brittl
 npx skills add https://github.com/cmnemoi/skills --skill write-unit-tests
 ```
 
+### micro-design
+
+Personal micro-design heuristics for writing and refactoring code. Use whenever writing new code or refactoring existing code, in any language. Covers naming conditions, placing responsibilities, value objects, rich entities, predicates, duplication, names, comments, and how far a refactoring should go. Does not cover tests or architecture.
+
+```bash
+npx skills add https://github.com/cmnemoi/skills --skill micro-design
+```
+
 ### ralph-loop
 
 Autonomous coding loop with context resets for mechanical, externally verifiable tasks. Use when a task is guided by a short repo spec, involves binary checks (tests pass/fail), and requires iterative progress. Based on "Ralph Wiggum" pattern for avoiding context rot in long-running autonomous sessions.
