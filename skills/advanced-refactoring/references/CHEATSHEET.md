@@ -19,6 +19,23 @@ Quick lookup for common refactoring scenarios.
 | Need to add substantial new code | Sprout Class |
 | Need behavior before/after existing | Wrap Method |
 | Need to wrap entire class | Wrap Class |
+| Unknown prerequisites for a large refactor | Mikado Method: attempt, discover, revert, map blockers |
+| Change shared method/API/event/DB contract | Parallel Change: Expand → Migrate → Contract |
+| Replace supplier/algorithm incrementally | Branch by Abstraction: seam → new → switch → cleanup |
+| Both contract and supplier change | Combine both behind a stable boundary |
+
+---
+
+## Migration Strategy vs. Local Refactoring
+
+| Scope | Use | Avoid |
+|-------|-----|-------|
+| Small, atomic and all callers controlled | Direct refactor | Unneeded compatibility scaffolding |
+| Contract must support old and new callers | Parallel Change | Removing old API before all consumers migrate |
+| Two implementations need to coexist | Branch by Abstraction | Scattered implementation-selection conditionals |
+| Prerequisites are unclear | Mikado Method | Guessing the whole change upfront |
+
+Keep mainline testable/releasable at each migration step. Test current observable behavior first when risky. Define cleanup/removal criteria before introducing temporary code. See [INCREMENTAL-CHANGES.md](INCREMENTAL-CHANGES.md).
 
 ---
 
@@ -106,6 +123,9 @@ These can be done safely without test coverage:
 | Break Out Method Object | `new MethodObject(args).execute()` |
 | Sprout Method | Add new method, call from old |
 | Wrap Method | Rename old → new wrapping |
+| Parallel Change | Expand → Migrate consumers → Contract |
+| Branch by Abstraction | Put old supplier behind seam → build new → switch at composition root → remove old |
+| Mikado | Attempt → identify blockers → revert → solve prerequisite leaves |
 
 ---
 
@@ -114,4 +134,4 @@ These can be done safely without test coverage:
 - **Feathers**: Working Effectively with Legacy Code
 - **Carlo**: UnderstandLegacyCode.com
 - **Kerievsky**: Refactoring to Patterns (Industrial Logic)
-- **Fowler**: Refactoring (refactoring.guru)
+- **Fowler**: Refactoring (refactoring.guru); [Parallel Change](https://martinfowler.com/bliki/ParallelChange.html); [Branch by Abstraction](https://martinfowler.com/bliki/BranchByAbstraction.html)
