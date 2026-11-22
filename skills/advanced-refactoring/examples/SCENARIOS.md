@@ -348,6 +348,75 @@ Test at the "Email" service (called by all subsystems) to maximize coverage.
 
 ---
 
+## Scenario 9: Parallel Change for a Public API
+
+**Context:** Several services call \`UserClient.get_user(raw_id)\`. We want a typed \`find_user(UserId)\` contract, but those services cannot all deploy at the same time.
+
+**Why Parallel Change?** The **consumer contract** changes, not the supplier implementation.
+
+**Small integrations:**
+
+1. **Expand**: Add \`find_user(UserId)\`; implement the old \`get_user(str)\` as a delegating adapter. Tests for both paths. Commit while old consumers are untouched.
+2. **Migrate**: Update one set of callers at a time. Integrate each batch, keeping the old method working; check for consumers outside the repository.
+3. **Contract**: Only after the last supported consumer is migrated, remove the old method and obsolete tests. Verify usage and compatibility gates.
+
+~~~python
+class UserClient:
+    def get_user(self, raw_id: str) -> User:
+        return self.find_user(UserId(raw_id))
+
+    def find_user(self, user_id: UserId) -> User:
+        return self._gateway.load(user_id.value)
+~~~
+
+**Failure mode:** Removing \`get_user\` after migrating only the local callers breaks independently deployed clients. A successful local grep does not establish compatibility.
+
+See [Parallel Change](../references/INCREMENTAL-CHANGES.md#parallel-change-expand--migrate--contract).
+
+---
+
+## Scenario 10: Branch by Abstraction for a Search Engine Replacement
+
+**Context:** A service uses a legacy search library directly. We want to replace it with another engine over several safe integrations without disrupting ongoing feature development.
+
+**Why Branch by Abstraction?** The **supplier implementation** changes, while callers should keep one stable interface.
+
+**Small integrations:**
+
+1. **Protect behavior**: Write characterization/contract tests for search semantics (matching, ordering, empty results, errors). Identify meaningful parity differences.
+2. **Introduce a seam**: Extract a minimal \`SearchGateway\` contract and adapt the legacy library. Make the service depend on the gateway, with no behavior change. Integrate this independently.
+3. **Implement new supplier**: Create \`NewSearchGateway\` behind the same contract. Exercise the same contract tests against both implementations and integrate incrementally.
+4. **Switch**: Select the new implementation at the composition root; optionally canary/flag it with a clear removal plan. Validate real metrics and rollback readiness.
+5. **Clean up**: Remove the legacy adapter and any temporary implementation toggle. Keep the gateway only if it remains a useful dependency boundary.
+
+~~~python
+from typing import Protocol
+
+class SearchGateway(Protocol):
+    def find(self, query: str) -> list[Result]: ...
+
+class SearchService:
+    def __init__(self, gateway: SearchGateway):
+        self._gateway = gateway
+
+    def search(self, query: str) -> list[Result]:
+        return self._gateway.find(query)
+
+# Composition root chooses LegacySearchGateway first, then NewSearchGateway.
+# Contract tests exercise both without changing SearchService.
+~~~
+
+**Relation to the rest of this skill:**
+- Use **Mikado** if extracting the gateway reveals a chain of hidden dependencies.
+- Use **Feathers' seams** and **characterization tests** to protect and isolate the old supplier.
+- Use **Extract Method / Move Method / Extract Class** in each small preparatory change.
+- Use **Parallel Change** if the gateway contract itself must change while consumers migrate.
+- Avoid a branch-selection \`if\` in every business method. Select an implementation once at the composition root; feature flags are optional.
+
+See [Branch by Abstraction](../references/INCREMENTAL-CHANGES.md#branch-by-abstraction-old--seam--new--switch--remove-old).
+
+---
+
 ## Sources
 
 - "Working Effectively with Legacy Code" — Michael Feathers
