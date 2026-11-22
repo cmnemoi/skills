@@ -1,6 +1,6 @@
 ---
 name: advanced-refactoring
-description: Proactively apply when refactoring legacy code, applying patterns, or improving code structure. Triggers on refactor, legacy code, technical debt, patterns, extract method, dependency breaking, seams, monster method, large class. Use when working with untested code, complex dependencies, or applying design patterns. Comprehensive refactoring from Feathers, Carlo, Kerievsky, and refactoring.guru.
+description: Proactively apply when refactoring legacy code, applying patterns, or improving code structure. Triggers on refactor, legacy code, technical debt, patterns, extract method, dependency breaking, seams, monster method, large class, parallel change, expand-contract, branch by abstraction, migration. Use when working with untested code, complex dependencies, or applying design patterns. Comprehensive refactoring from Feathers, Carlo, Kerievsky, and refactoring.guru.
 ---
 
 # Advanced Refactoring
@@ -25,7 +25,8 @@ What's your starting point?
 ├─ Code has no tests                    → Go to "How to add tests to legacy code?"
 ├─ Code has tests but is messy          → Go to "Which code smell needs fixing?"
 ├─ Large class / monster method         → Go to "How to break down a monster?"
-└─ Complex dependencies                 → Go to "How to break dependencies?"
+├─ Complex dependencies                 → Go to "How to break dependencies?"
+└─ Large incremental migration          → Go to "How to deliver a risky change incrementally?"
 
 ### "How to add tests to legacy code?"
 
@@ -53,6 +54,19 @@ What extraction opportunity exists?
 ├─ Clear block of functionality        → Extract Method (prefer 0 params)
 ├─ No clear sections                    → Introduce Sensing Variable first
 ├─ Too many local variables             → Break Out Method Object → `references/DEPENDENCY-BREAKING.md` (lines 224-262)
+
+---
+
+### "How to deliver a risky change incrementally?"
+
+What is changing?
+├─ Unknown dependencies or prerequisites     → Mikado Method: explore, revert, graph the blockers
+├─ Shared contract, API, event or DB schema   → Parallel Change: Expand → Migrate → Contract
+├─ Long-running replacement of a supplier    → Branch by Abstraction: isolate → implement → switch → clean up
+├─ Both the contract and the implementation   → Combine strategies; migrate each boundary deliberately
+└─ All callers can change safely in one step  → Direct refactoring; avoid migration scaffolding
+
+See `references/INCREMENTAL-CHANGES.md` for steps, examples, trade-offs, rollback, and cleanup criteria.
 
 ---
 
@@ -121,29 +135,42 @@ How to identify responsibilities in large classes:
 
 ---
 
+### Incremental Change Strategies
+
+| Strategy | Purpose | Relationship to existing techniques |
+|----------|---------|-------------------------------------|
+| **Mikado Method** | Discover prerequisites of an initially unclear change | Build a dependency graph; revert failed exploration; implement leaves first (`CARLO-STRATEGIES.md`) |
+| **Parallel Change** | Evolve a contract without breaking old callers | Introduce compatible APIs, migrate consumers, remove old API; can help introduce a seam |
+| **Branch by Abstraction** | Replace an implementation over small integrations | Introduce a seam/DI boundary, preserve old supplier, build and test replacement, switch and clean up |
+| **Seams / characterization tests** | Make legacy code substitutable and observable | Support both migration strategies; test behavior, not just the new wiring |
+
+**Integration rule:** For risky changes, first secure behavior; use Mikado if prerequisites are unknown; choose a migration strategy by what must coexist; execute Extract Method / Move Method / Extract Class and other small refactorings within each step. No new abstraction is required for a simple atomic change. See `references/INCREMENTAL-CHANGES.md`.
+
+---
+
 ## Integration: Complete Workflow
 
 ```
-START: Need to change legacy code
+START: Need to change code safely
 │
-├─► Have tests?
-│   ├─ YES → Safe to refactor
-│   │
-│   └─ NO → Can we add tests easily?
-│       ├─ YES → Add tests, then refactor
-│       │
-│       └─ NO → Use dependency-breaking techniques
-│           ├─ 1. Identify change points
-│           ├─ 2. Find test points (sensing/separation)
-│           ├─ 3. Break dependencies → see references/DEPENDENCY-BREAKING.md
-│           ├─ 4. Write characterization tests
-│           └─ 5. Refactor safely
+├─► Understand behavior and risk
+│   ├─ Existing adequate tests → keep them green
+│   └─ Missing safety net → characterization tests, seams, dependency breaking
 │
-└─► Apply appropriate pattern → see references/REFACTORING-TO-PATTERNS.md
-    ├─ Large class → Extract Class
-    ├── Duplicated code → Extract Method, Move Method
-    ├── Complex conditionals → Replace Conditional with Polymorphism
-    └── Long method → Break Out Method Object, Extract Method
+├─► Discover dependencies
+│   └─ Unknown / blocked → Mikado: try, record blockers, revert, solve leaves
+│
+├─► Choose delivery strategy
+│   ├─ Small atomic edit → direct incremental refactoring
+│   ├─ Contract change → Parallel Change: expand → migrate → contract
+│   ├─ Implementation replacement → Branch by Abstraction: seam → new → switch
+│   └─ Both → combine, keeping supported consumers compatible
+│
+├─► Work in small integrated steps
+│   └─ Extract / Move / Rename / Replace Conditional, etc., with verification
+│
+└─► Finish migration
+    └─ Remove obsolete code, adapters and temporary toggles; verify callers
 ```
 
 ### Safety Principles
@@ -154,6 +181,8 @@ START: Need to change legacy code
 4. **Use IDE refactoring** — let tools do mechanical work
 5. **Don't refactor and add features simultaneously** — separate concerns
 6. **Commit frequently** — small commits, verify each
+7. **Keep supported consumers compatible** — do not remove contracts before migration is complete
+8. **Remove temporary scaffolding** — clean up old paths, compatibility adapters and migration toggles
 
 ---
 
@@ -166,6 +195,8 @@ START: Need to change legacy code
 | Ignoring failing tests | Hidden regressions | Fix or understand failures |
 | Refactoring for "cleanliness" only | No immediate benefit | Refactor when there's a reason |
 | Pattern addiction | Over-engineering | Apply patterns only when needed |
+| Permanent "temporary" compatibility | Duplicate paths, confusing ownership | Set removal criteria during Expand / abstraction introduction |
+| Unnecessary feature flags / interfaces | Maintenance overhead, hidden branching | Start with direct refactoring or a simple DI binding |
 
 ---
 
@@ -177,6 +208,8 @@ START: Need to change legacy code
 | Adding features to untested code | Code already well-tested |
 | Breaking down large classes | Small, focused classes |
 | Applying design patterns | Code doesn't need patterns |
+| Multi-step API/schema migration | Tiny atomic change with no external consumers |
+| Replacing a subsystem while keeping mainline stable | No migration or rollout risk |
 
 ---
 
@@ -194,6 +227,9 @@ START: Need to change legacy code
 | Null checks everywhere | Introduce Null Object → `references/REFACTORING-TO-PATTERNS.md` (lines 113-145) |
 | Long parameter list | Introduce Parameter Object → `references/REFACTORING-TO-PATTERNS.md` (lines 149-170) |
 | Code smell identification | See `references/REFACTORING-GURU.md` (lines 5-63: 21 code smells) |
+| Contract/API migration | Parallel Change → `references/INCREMENTAL-CHANGES.md` |
+| Replace supplier incrementally | Branch by Abstraction → `references/INCREMENTAL-CHANGES.md` |
+| Unknown prerequisites | Mikado Method → `references/CARLO-STRATEGIES.md` |
 | Practical examples | See `examples/SCENARIOS.md` |
 
 ---
@@ -211,3 +247,5 @@ START: Need to change legacy code
 - [Martin Fowler: Refactoring](https://martinfowler.com/books/refactoring.html) — Foundation text
 - [Your Code as a Crime Scene](https://www.adamtornhill.com/) — Adam Tornhill
 - [The Mikado Method](https://www.mikadomethod.info/) — See `references/CARLO-STRATEGIES.md`
+- [Martin Fowler: Parallel Change](https://martinfowler.com/bliki/ParallelChange.html) — See `references/INCREMENTAL-CHANGES.md`
+- [Martin Fowler: Branch By Abstraction](https://martinfowler.com/bliki/BranchByAbstraction.html) — See `references/INCREMENTAL-CHANGES.md`
