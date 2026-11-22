@@ -39,9 +39,9 @@ class Users:
         return self._store.load(user_id.value)
 ~~~
 
-**Migrate** — Move callers gradually from \`get_user(raw_id)\` to \`find_user(UserId(raw_id))\`. Verify both paths and take small, reviewable, integrated steps.
+**Migrate** — Move callers gradually from `get_user(raw_id)` to `find_user(UserId(raw_id))`. Verify both paths and take small, reviewable, integrated steps.
 
-**Contract** — Remove \`get_user\` only after checking that no supported caller (including externally deployed versions) still needs it.
+**Contract** — Remove `get_user` only after checking that no supported caller (including externally deployed versions) still needs it.
 
 **Important for data/contracts**:
 - A database migration requires sequencing compatible schema/application versions; backfill, dual reads/writes, data consistency, and rollback need explicit treatment where applicable. Do not imply dual writes are always safe or mandatory.
@@ -81,7 +81,7 @@ class SearchService:
 **Quality gates**:
 - Each intermediate commit/PR is independently understandable, testable, and safely deployable with the existing implementation.
 - Behavior contracts matter more than interface shape; include errors, ordering, performance constraints, and side effects as relevant.
-- Prefer construction-time selection/DI to scattering \`if new_backend\` through domain code.
+- Prefer construction-time selection/DI to scattering `if new_backend` through domain code.
 - A feature flag is **optional**, not synonymous with Branch by Abstraction; if used, define its retirement.
 - Don't call unreferenced incomplete code a valid "slice" unless it serves a planned integration step; build the new implementation behind the seam and use contract tests before switching.
 - For a tiny local replacement, direct refactoring is simpler.
